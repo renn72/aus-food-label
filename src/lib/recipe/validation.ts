@@ -1,12 +1,11 @@
 import { z } from 'zod'
 
 const positiveMetricSchema = z.coerce.number().positive().max(1_000_000)
-const positivePercentageSchema = z.coerce.number().positive().max(1_000)
 
 export const createRecipeSchema = z
   .object({
     name: z.string().trim().min(1).max(160),
-    outputScalePercent: positivePercentageSchema,
+    outputWeight: positiveMetricSchema,
     productWeight: positiveMetricSchema,
     serveSize: positiveMetricSchema,
     ingredients: z

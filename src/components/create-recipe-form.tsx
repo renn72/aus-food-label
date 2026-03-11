@@ -20,7 +20,7 @@ type RecipeIngredientDraft = {
 
 type CreateRecipePayload = {
   name: string
-  outputScalePercent: number
+  outputWeight: number
   productWeight: number
   serveSize: number
   ingredients: Array<{
@@ -39,7 +39,7 @@ export function CreateRecipeForm({
   const router = useRouter()
   const nextIngredientRowIdRef = useRef(1)
   const [name, setName] = useState('')
-  const [outputScalePercent, setOutputScalePercent] = useState('100')
+  const [outputWeight, setOutputWeight] = useState('100')
   const [productWeight, setProductWeight] = useState('100')
   const [serveSize, setServeSize] = useState('100')
   const [ingredientRows, setIngredientRows] = useState<RecipeIngredientDraft[]>(() => [
@@ -61,7 +61,7 @@ export function CreateRecipeForm({
     mutationFn: async (payload: CreateRecipePayload) => await $createRecipe({ data: payload }),
     onSuccess: async () => {
       setName('')
-      setOutputScalePercent('100')
+      setOutputWeight('100')
       setProductWeight('100')
       setServeSize('100')
       nextIngredientRowIdRef.current = 1
@@ -79,10 +79,11 @@ export function CreateRecipeForm({
     (total, row) => total + parseMetricInput(row.quantity),
     0,
   )
-  const parsedOutputScalePercent = parseMetricInput(outputScalePercent)
+  const parsedOutputWeight = parseMetricInput(outputWeight)
   const parsedProductWeight = parseMetricInput(productWeight)
   const parsedServeSize = parseMetricInput(serveSize)
-  const effectiveOutputWeight = (rawNetWeight * parsedOutputScalePercent) / 100
+  const effectiveOutputYieldPercentage =
+    rawNetWeight > 0 ? (parsedOutputWeight / rawNetWeight) * 100 : 0
   const effectiveServingsPerPack =
     parsedProductWeight > 0 && parsedServeSize > 0 ? parsedProductWeight / parsedServeSize : 0
 
@@ -95,7 +96,7 @@ export function CreateRecipeForm({
 
     const payload = buildPayload({
       name,
-      outputScalePercent,
+      outputWeight,
       productWeight,
       serveSize,
       ingredientRows,
@@ -132,11 +133,11 @@ export function CreateRecipeForm({
 
           <div className="grid gap-4 lg:grid-cols-3">
             <div className="grid gap-2">
-              <Label htmlFor="recipe-output-scale-percent">Output yield (% of input)</Label>
+              <Label htmlFor="recipe-output-weight">Output weight (g)</Label>
               <Input
-                id="recipe-output-scale-percent"
-                value={outputScalePercent}
-                onChange={(event) => setOutputScalePercent(event.target.value)}
+                id="recipe-output-weight"
+                value={outputWeight}
+                onChange={(event) => setOutputWeight(event.target.value)}
                 type="number"
                 min="0.01"
                 step="0.01"
@@ -146,8 +147,8 @@ export function CreateRecipeForm({
                 required
               />
               <p className="text-xs leading-5 text-muted-foreground">
-                Output weight will be {formatWeightValue(effectiveOutputWeight)} g from{' '}
-                {formatWeightValue(rawNetWeight)} g of input ingredients.
+                This is {formatWeightValue(effectiveOutputYieldPercentage)}% of the{' '}
+                {formatWeightValue(rawNetWeight)} g input ingredient total.
               </p>
             </div>
 
@@ -292,7 +293,7 @@ export function CreateRecipeForm({
               </div>
               <div className="flex items-center justify-between gap-3">
                 <span className="text-muted-foreground">Output weight</span>
-                <span className="font-medium">{formatWeightValue(effectiveOutputWeight)} g</span>
+                <span className="font-medium">{formatWeightValue(parsedOutputWeight)} g</span>
               </div>
               <div className="flex items-center justify-between gap-3">
                 <span className="text-muted-foreground">Product weight</span>
@@ -307,13 +308,15 @@ export function CreateRecipeForm({
                 <span className="font-medium">{formatWeightValue(effectiveServingsPerPack)}</span>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <span className="text-muted-foreground">Output yield</span>
-                <span className="font-medium">{formatWeightValue(parsedOutputScalePercent)}%</span>
+                <span className="text-muted-foreground">Derived yield</span>
+                <span className="font-medium">
+                  {formatWeightValue(effectiveOutputYieldPercentage)}%
+                </span>
               </div>
             </div>
             <p className="mt-3 text-xs leading-5 text-muted-foreground">
               Servings per package are derived from product weight divided by serve weight. Output
-              yield scales from the total input ingredient weight.
+              yield is shown as a derived percentage from the input ingredient total.
             </p>
           </div>
 
@@ -364,13 +367,13 @@ function IngredientPicker({
 
 function buildPayload({
   name,
-  outputScalePercent,
+  outputWeight,
   productWeight,
   serveSize,
   ingredientRows,
 }: {
   name: string
-  outputScalePercent: string
+  outputWeight: string
   productWeight: string
   serveSize: string
   ingredientRows: RecipeIngredientDraft[]
@@ -406,12 +409,12 @@ function buildPayload({
     return null
   }
 
-  const parsedOutputScalePercent = parseMetricInput(outputScalePercent)
+  const parsedOutputWeight = parseMetricInput(outputWeight)
   const parsedProductWeight = parseMetricInput(productWeight)
   const parsedServeSize = parseMetricInput(serveSize)
 
-  if (parsedOutputScalePercent <= 0) {
-    toast.error('Output yield must be greater than zero.')
+  if (parsedOutputWeight <= 0) {
+    toast.error('Output weight must be greater than zero.')
     return null
   }
 
@@ -427,7 +430,7 @@ function buildPayload({
 
   return {
     name: trimmedName,
-    outputScalePercent: parsedOutputScalePercent,
+    outputWeight: parsedOutputWeight,
     productWeight: parsedProductWeight,
     serveSize: parsedServeSize,
     ingredients: recipeIngredients.map((ingredient) => ({

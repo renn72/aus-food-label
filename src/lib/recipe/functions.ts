@@ -117,11 +117,6 @@ export const $createRecipe = createServerFn({ method: 'POST' })
     }
 
     const ingredientIds = data.ingredients.map((ingredientEntry) => ingredientEntry.ingredientId)
-    const baseInputWeight = data.ingredients.reduce(
-      (total, ingredientEntry) => total + ingredientEntry.quantity,
-      0,
-    )
-    const outputNetWeight = (baseInputWeight * data.outputScalePercent) / 100
     const servingsPerPack = data.productWeight / data.serveSize
 
     return await db.transaction(async (tx) => {
@@ -146,7 +141,7 @@ export const $createRecipe = createServerFn({ method: 'POST' })
         .values({
           userId: user.id,
           name: data.name,
-          outputNetWeight,
+          outputNetWeight: data.outputWeight,
           productWeight: data.productWeight,
           serveSize: data.serveSize,
           servingsPerPack,
