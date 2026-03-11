@@ -1,4 +1,5 @@
 import {
+  RiBookletLine,
   RiFileList3Line,
   RiLoader4Line,
   RiMoonClearLine,
@@ -29,6 +30,7 @@ export function AppHeader({ className }: { readonly className?: string }) {
   const nextTheme = theme === 'light' ? 'dark' : 'light'
   const themeLabel = nextTheme === 'dark' ? 'Dark mode' : 'Light mode'
   const isIngredientRoute = location.pathname.startsWith('/ingredient')
+  const isRecipeRoute = location.pathname.startsWith('/recipe')
 
   const handleSignOut = async () => {
     if (isSigningOut) return
@@ -69,17 +71,31 @@ export function AppHeader({ className }: { readonly className?: string }) {
 
       <div className="flex flex-wrap items-center justify-end gap-2">
         {user ? (
-          <Link
-            to="/ingredient"
-            className={buttonVariants({
-              variant: isIngredientRoute ? 'default' : 'outline',
-              size: 'sm',
-              className: 'h-10 rounded-full px-3',
-            })}
-          >
-            <RiFileList3Line className="size-4" />
-            <span className="hidden sm:inline">Ingredients</span>
-          </Link>
+          <>
+            <Link
+              to="/ingredient"
+              className={buttonVariants({
+                variant: isIngredientRoute ? 'default' : 'outline',
+                size: 'sm',
+                className: 'h-10 rounded-full px-3',
+              })}
+            >
+              <RiFileList3Line className="size-4" />
+              <span className="hidden sm:inline">Ingredients</span>
+            </Link>
+
+            <Link
+              to="/recipe"
+              className={buttonVariants({
+                variant: isRecipeRoute ? 'default' : 'outline',
+                size: 'sm',
+                className: 'h-10 rounded-full px-3',
+              })}
+            >
+              <RiBookletLine className="size-4" />
+              <span className="hidden sm:inline">Recipes</span>
+            </Link>
+          </>
         ) : null}
 
         <Button

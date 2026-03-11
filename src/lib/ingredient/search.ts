@@ -1,18 +1,5 @@
 import type { IngredientTableRow } from '@/lib/ingredient/functions'
 
-const SEARCHABLE_FIELDS: Array<keyof IngredientTableRow> = [
-  'name',
-  'calories',
-  'energy',
-  'protein',
-  'fatTotal',
-  'fatSaturated',
-  'carbohydrate',
-  'sugar',
-  'dietaryFibre',
-  'sodium',
-]
-
 export function searchIngredientRows(rows: IngredientTableRow[], query: string) {
   const normalizedQuery = normalizeText(query)
 
@@ -24,7 +11,19 @@ export function searchIngredientRows(rows: IngredientTableRow[], query: string) 
 
   return rows
     .map((row, index) => {
-      const searchableValues = SEARCHABLE_FIELDS.map((field) => normalizeText(row[field]))
+      const searchableValues = [
+        normalizeText(row.name),
+        normalizeText(row.isAusFood ? 'aus food imported' : 'custom ingredient user created'),
+        normalizeText(row.calories),
+        normalizeText(row.energy),
+        normalizeText(row.protein),
+        normalizeText(row.fatTotal),
+        normalizeText(row.fatSaturated),
+        normalizeText(row.carbohydrate),
+        normalizeText(row.sugar),
+        normalizeText(row.dietaryFibre),
+        normalizeText(row.sodium),
+      ]
       const normalizedName = searchableValues[0]
       const haystack = searchableValues.join(' ').trim()
 
