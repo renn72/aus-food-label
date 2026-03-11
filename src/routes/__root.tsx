@@ -1,19 +1,19 @@
 /// <reference types="vite/client" />
-import { TanStackDevtools } from "@tanstack/react-devtools";
-import type { QueryClient } from "@tanstack/react-query";
-import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";
-import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
-import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
+import { TanStackDevtools } from '@tanstack/react-devtools'
+import type { QueryClient } from '@tanstack/react-query'
+import { ReactQueryDevtoolsPanel } from '@tanstack/react-query-devtools'
+import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from '@tanstack/react-router'
+import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 
-import { ThemeProvider } from "@/components/theme-provider";
-import { Toaster } from "@/components/ui/sonner";
-import type { AuthQueryResult } from "@/lib/auth/queries";
+import { ThemeProvider } from '@/components/theme-provider'
+import { Toaster } from '@/components/ui/sonner'
+import type { AuthQueryResult } from '@/lib/auth/queries'
 
-import appCss from "@/styles.css?url";
+import appCss from '@/styles.css?url'
 
 export const Route = createRootRouteWithContext<{
-  queryClient: QueryClient;
-  user: AuthQueryResult;
+  queryClient: QueryClient
+  user: AuthQueryResult
 }>()({
   // Typically we don't need the user immediately in landing pages.
   // For protected routes with loader data, see /_auth/route.tsx
@@ -23,53 +23,42 @@ export const Route = createRootRouteWithContext<{
   head: () => ({
     meta: [
       {
-        charSet: "utf-8",
+        charSet: 'utf-8',
       },
       {
-        name: "viewport",
-        content: "width=device-width, initial-scale=1",
+        name: 'viewport',
+        content: 'width=device-width, initial-scale=1',
       },
       {
-        title: "aus-food-label",
+        title: 'aus-food-label',
       },
       {
-        name: "description",
-        content: "A TanStack Start project scaffolded with create-mugnavo.",
+        name: 'description',
+        content: 'Dark-first auth and ingredient management for aus-food-label.',
       },
     ],
-    links: [
-      // Replace with your icons here, or remove if you have a favicon.ico in public/
-      {
-        rel: "icon",
-        href: "https://mugnavo.com/favicon.ico",
-      },
-      {
-        rel: "apple-touch-icon",
-        href: "https://mugnavo.com/apple-touch-icon.png",
-      },
-      { rel: "stylesheet", href: appCss },
-    ],
+    links: [{ rel: 'stylesheet', href: appCss }],
   }),
   component: RootComponent,
-});
+})
 
 function RootComponent() {
   return (
     <RootDocument>
       <Outlet />
     </RootDocument>
-  );
+  )
 }
 
 function RootDocument({ children }: { readonly children: React.ReactNode }) {
   return (
     // suppress since we're updating the "dark" class in ThemeProvider
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className="dark" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
       <body>
-        <ThemeProvider>
+        <ThemeProvider defaultTheme="dark">
           {children}
           <Toaster richColors />
         </ThemeProvider>
@@ -77,11 +66,11 @@ function RootDocument({ children }: { readonly children: React.ReactNode }) {
         <TanStackDevtools
           plugins={[
             {
-              name: "TanStack Query",
+              name: 'TanStack Query',
               render: <ReactQueryDevtoolsPanel />,
             },
             {
-              name: "TanStack Router",
+              name: 'TanStack Router',
               render: <TanStackRouterDevtoolsPanel />,
             },
           ]}
@@ -90,5 +79,5 @@ function RootDocument({ children }: { readonly children: React.ReactNode }) {
         <Scripts />
       </body>
     </html>
-  );
+  )
 }

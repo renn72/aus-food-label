@@ -1,34 +1,24 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 
-import { authQueryOptions } from "@/lib/auth/queries";
+import { authQueryOptions } from '@/lib/auth/queries'
 
-export const Route = createFileRoute("/_guest")({
-  component: RouteComponent,
+export const Route = createFileRoute('/_guest')({
+  component: Outlet,
   beforeLoad: async ({ context }) => {
-    const REDIRECT_URL = "/app";
+    const REDIRECT_URL = '/app'
 
     const user = await context.queryClient.ensureQueryData({
       ...authQueryOptions(),
       revalidateIfStale: true,
-    });
+    })
     if (user) {
       throw redirect({
         to: REDIRECT_URL,
-      });
+      })
     }
 
     return {
       redirectUrl: REDIRECT_URL,
-    };
+    }
   },
-});
-
-function RouteComponent() {
-  return (
-    <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 md:p-10">
-      <div className="w-full max-w-sm">
-        <Outlet />
-      </div>
-    </div>
-  );
-}
+})

@@ -1,13 +1,28 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from '@tanstack/react-router'
 
-import { IntroPageDeleteMe } from "@/components/_DELETE_ME_intro_page";
+import { AuthScreen } from '@/components/auth-screen'
+import { authQueryOptions } from '@/lib/auth/queries'
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute('/')({
+  beforeLoad: async ({ context }) => {
+    const redirectUrl = '/app'
+
+    const user = await context.queryClient.ensureQueryData({
+      ...authQueryOptions(),
+      revalidateIfStale: true,
+    })
+
+    if (user) {
+      throw redirect({ to: redirectUrl })
+    }
+
+    return { redirectUrl }
+  },
   component: HomePage,
-});
+})
 
 function HomePage() {
-  // This is the intro component for TanStarter, which you may delete after creating the project.
-  // Have fun!
-  return <IntroPageDeleteMe />;
+  const { redirectUrl } = Route.useRouteContext()
+
+  return <AuthScreen redirectUrl={redirectUrl} />
 }
