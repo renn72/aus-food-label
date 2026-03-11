@@ -3,6 +3,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { startTransition, useDeferredValue, useState } from 'react'
 
 import { AppShell } from '@/components/app-shell'
+import { CreateIngredientSheet } from '@/components/create-ingredient-sheet'
 import { IngredientTable } from '@/components/ingredient-table'
 import { Input } from '@/components/ui/input'
 import { WsysBrand } from '@/components/wsys-brand'
@@ -32,19 +33,23 @@ function IngredientPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3 rounded-2xl border border-border/70 bg-background/70 px-4 py-3">
-            <RiFileList3Line className="size-5 text-primary" />
-            <div>
-              <p className="text-xs font-medium tracking-[0.2em] text-muted-foreground uppercase">
-                Results
-              </p>
-              <p className="text-lg font-semibold">
-                {filteredRows.length}
-                <span className="ml-2 text-sm font-medium text-muted-foreground">
-                  / {rows.length}
-                </span>
-              </p>
+          <div className="flex flex-wrap items-center justify-end gap-3">
+            <div className="flex items-center gap-3 rounded-2xl border border-border/70 bg-background/70 px-4 py-3">
+              <RiFileList3Line className="size-5 text-primary" />
+              <div>
+                <p className="text-xs font-medium tracking-[0.2em] text-muted-foreground uppercase">
+                  Results
+                </p>
+                <p className="text-lg font-semibold">
+                  {filteredRows.length}
+                  <span className="ml-2 text-sm font-medium text-muted-foreground">
+                    / {rows.length}
+                  </span>
+                </p>
+              </div>
             </div>
+
+            <CreateIngredientSheet />
           </div>
         </div>
 

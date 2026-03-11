@@ -4,6 +4,7 @@ import * as React from 'react'
 import { DataTable } from '@/components/data-table/data-table'
 import { DataTableColumnHeader } from '@/components/data-table/data-table-column-header'
 import { DataTableViewOptions } from '@/components/data-table/data-table-view-options'
+import { Badge } from '@/components/ui/badge'
 import { useDataTable } from '@/hooks/use-data-table'
 import type { IngredientTableRow } from '@/lib/ingredient/functions'
 
@@ -39,6 +40,25 @@ const columns: ColumnDef<IngredientTableRow>[] = [
     cell: ({ getValue }) => (
       <div className="min-w-64 font-medium text-foreground">{formatMetric(getValue())}</div>
     ),
+  },
+  {
+    accessorKey: 'isAusFood',
+    size: 140,
+    meta: {
+      label: 'Aus food',
+    },
+    header: ({ column }) => <DataTableColumnHeader column={column} label="Aus food" />,
+    cell: ({ getValue }) => {
+      const isAusFood = getValue() === true
+
+      return (
+        <div className="flex justify-center">
+          <Badge variant={isAusFood ? 'default' : 'secondary'}>
+            {isAusFood ? 'Yes' : 'No'}
+          </Badge>
+        </div>
+      )
+    },
   },
   {
     accessorKey: 'calories',
