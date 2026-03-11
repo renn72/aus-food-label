@@ -15,18 +15,18 @@ export function AppShell({
   return (
     <div
       className={cn(
-        'bg-background px-6 py-6 text-foreground sm:px-8',
-        fitViewport ? 'h-svh overflow-hidden' : 'min-h-svh',
+        'bg-background px-6 text-foreground sm:px-8',
+        fitViewport ? 'h-svh overflow-hidden pt-0 pb-6' : 'min-h-svh py-6',
       )}
     >
       <div
         className={cn(
           'mx-auto flex w-full flex-col gap-6',
           maxWidthClassName,
-          fitViewport && 'h-full min-h-0',
+          fitViewport && 'h-full min-h-0 gap-4',
         )}
       >
-        <AppHeader />
+        <AppHeader className={cn(fitViewport && 'sticky top-0 z-30')} />
         {children}
       </div>
     </div>

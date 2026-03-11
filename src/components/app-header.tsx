@@ -17,7 +17,7 @@ import authClient from '@/lib/auth/auth-client'
 import { authQueryOptions } from '@/lib/auth/queries'
 import { cn } from '@/lib/utils'
 
-export function AppHeader() {
+export function AppHeader({ className }: { readonly className?: string }) {
   const { theme, setTheme } = useTheme()
   const queryClient = useQueryClient()
   const router = useRouter()
@@ -52,7 +52,12 @@ export function AppHeader() {
   }
 
   return (
-    <header className="flex flex-wrap items-center justify-between gap-3 rounded-full border border-border/70 bg-card/70 px-4 py-3 shadow-lg shadow-black/10 backdrop-blur-sm">
+    <header
+      className={cn(
+        'flex flex-wrap items-center justify-between gap-3 rounded-full border border-border/70 bg-card/70 px-4 py-3 shadow-lg shadow-black/10 backdrop-blur-sm',
+        className,
+      )}
+    >
       <Link to={user ? '/app' : '/'} className="min-w-0">
         <p className="text-xs font-medium tracking-[0.35em] text-primary/80 uppercase">
           Aus Food Label
