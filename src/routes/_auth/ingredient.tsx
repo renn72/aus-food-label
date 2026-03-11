@@ -20,8 +20,8 @@ function IngredientPage() {
   const filteredRows = searchIngredientRows(rows, deferredQuery)
 
   return (
-    <AppShell maxWidthClassName="max-w-[min(100%,112rem)]">
-      <section className="grid gap-6">
+    <AppShell maxWidthClassName="max-w-[min(100%,112rem)]" fitViewport>
+      <section className="grid min-h-0 flex-1 grid-rows-[auto_auto_minmax(0,1fr)] gap-6 overflow-hidden">
         <div className="flex flex-col gap-4 rounded-3xl border border-border/70 bg-card/70 px-6 py-5 shadow-lg shadow-black/10 backdrop-blur-sm sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-medium tracking-[0.35em] text-primary/80 uppercase">
@@ -67,7 +67,9 @@ function IngredientPage() {
           </div>
         </div>
 
-        <IngredientTable rows={filteredRows} />
+        <div className="min-h-0">
+          <IngredientTable rows={filteredRows} />
+        </div>
       </section>
     </AppShell>
   )

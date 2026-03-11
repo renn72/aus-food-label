@@ -8,6 +8,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import type { IngredientTableRow } from '@/lib/ingredient/functions'
+import { cn } from '@/lib/utils'
 
 const COLUMNS: Array<{
   key: keyof IngredientTableRow
@@ -28,13 +29,16 @@ const COLUMNS: Array<{
 
 export function IngredientTable({ rows }: { readonly rows: IngredientTableRow[] }) {
   return (
-    <div className="overflow-hidden rounded-3xl border border-border/70 bg-card/70 shadow-xl shadow-black/10 backdrop-blur-sm">
-      <ScrollArea className="h-[72svh] w-full">
+    <div className="h-full min-h-0 overflow-hidden rounded-3xl border border-border/70 bg-card/70 shadow-xl shadow-black/10 backdrop-blur-sm">
+      <ScrollArea className="h-full w-full">
         <Table className="w-full min-w-[78rem]">
-          <TableHeader className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm">
+          <TableHeader className="bg-card/95">
             <TableRow className="hover:bg-transparent">
               {COLUMNS.map((column) => (
-                <TableHead key={column.key} className={column.className}>
+                <TableHead
+                  key={column.key}
+                  className={cn(column.className, 'sticky top-0 z-10 bg-card/95 backdrop-blur-sm')}
+                >
                   {column.label}
                 </TableHead>
               ))}
