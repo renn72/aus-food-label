@@ -9,6 +9,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
+import { AppHeader } from '@/components/app-header'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -105,8 +106,10 @@ export function AuthScreen({ defaultMode = 'login', redirectUrl }: AuthScreenPro
     <main className="relative min-h-svh overflow-hidden bg-background text-foreground">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,oklch(0.42_0.1_45_/_0.35),transparent_34%),radial-gradient(circle_at_bottom_right,oklch(0.32_0.06_52_/_0.28),transparent_30%)]" />
       <div className="absolute inset-x-0 top-0 h-56 bg-[linear-gradient(180deg,rgba(0,0,0,0.28),transparent)]" />
-      <div className="relative mx-auto flex min-h-svh max-w-6xl items-center px-6 py-10 sm:px-8">
-        <div className="grid w-full gap-10 lg:grid-cols-[minmax(0,1fr)_30rem] lg:items-center">
+      <div className="relative mx-auto flex min-h-svh max-w-6xl flex-col px-6 py-6 sm:px-8">
+        <AppHeader />
+
+        <div className="grid flex-1 items-center gap-10 py-10 lg:grid-cols-[minmax(0,1fr)_30rem] lg:items-center">
           <section className="space-y-8">
             <div className="space-y-4">
               <p className="text-xs font-medium tracking-[0.35em] text-primary/80 uppercase">
