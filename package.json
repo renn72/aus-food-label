@@ -13,6 +13,7 @@
 		"format:check": "oxfmt --check",
 		"check": "pnpm format && pnpm lint",
 		"db": "drizzle-kit",
+		"db:import-ingredients": "node scripts/import-ingredients.mjs",
 		"deps": "pnpm dlx taze@latest -Ilw",
 		"deps:major": "pnpm dlx taze@latest major -Ilw",
 		"tanstack": "pnpm dlx @tanstack/cli@latest",
