@@ -46,10 +46,13 @@ interface UseDataTableProps<TData>
       | 'manualPagination'
       | 'manualSorting'
     >,
-    Required<Pick<TableOptions<TData>, 'pageCount'>> {
+    Partial<Pick<TableOptions<TData>, 'pageCount'>> {
   initialState?: Omit<Partial<TableState>, 'sorting'> & {
     sorting?: ExtendedColumnSort<TData>[]
   }
+  manualFiltering?: boolean
+  manualPagination?: boolean
+  manualSorting?: boolean
   queryKeys?: Partial<QueryKeys>
   history?: 'push' | 'replace'
   debounceMs?: number
@@ -149,6 +152,9 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
     columns,
     pageCount = -1,
     initialState,
+    manualFiltering = true,
+    manualPagination = true,
+    manualSorting = true,
     queryKeys,
     history = 'replace',
     debounceMs = DEBOUNCE_MS,
@@ -372,7 +378,7 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
     ...tableProps,
     columns,
     initialState,
-    pageCount,
+    pageCount: manualPagination ? pageCount : undefined,
     state: {
       pagination,
       sorting,
@@ -384,7 +390,7 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
       ...tableProps.defaultColumn,
       enableColumnFilter: false,
     },
-    enableRowSelection: true,
+    enableRowSelection: tableProps.enableRowSelection ?? true,
     onRowSelectionChange: setRowSelection,
     onPaginationChange,
     onSortingChange,
@@ -397,9 +403,9 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
     getFacetedMinMaxValues: getFacetedMinMaxValues(),
-    manualPagination: true,
-    manualSorting: true,
-    manualFiltering: true,
+    manualPagination,
+    manualSorting,
+    manualFiltering,
     meta: {
       ...tableProps.meta,
       queryKeys: {

@@ -67,7 +67,7 @@ function IngredientPage() {
         </div>
 
         <div className="min-h-0">
-          <IngredientTable rows={filteredRows} />
+          <IngredientTable rows={filteredRows} query={deferredQuery} />
         </div>
       </section>
     </AppShell>

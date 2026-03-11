@@ -1,24 +1,19 @@
-import type { Table } from "@tanstack/react-table";
-import {
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-} from "lucide-react";
+import type { Table } from '@tanstack/react-table'
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react'
 
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+} from '@/components/ui/select'
+import { cn } from '@/lib/utils'
 
-interface DataTablePaginationProps<TData> extends React.ComponentProps<"div"> {
-  table: Table<TData>;
-  pageSizeOptions?: number[];
+interface DataTablePaginationProps<TData> extends React.ComponentProps<'div'> {
+  table: Table<TData>
+  pageSizeOptions?: number[]
 }
 
 export function DataTablePagination<TData>({
@@ -27,25 +22,33 @@ export function DataTablePagination<TData>({
   className,
   ...props
 }: DataTablePaginationProps<TData>) {
+  const rowCount = table.getFilteredRowModel().rows.length
+  const pageCount = table.getPageCount()
+  const currentPage = rowCount === 0 ? 0 : table.getState().pagination.pageIndex + 1
+  const rowSelectionEnabled =
+    table.options.enableRowSelection === true ||
+    typeof table.options.enableRowSelection === 'function'
+
   return (
     <div
       className={cn(
-        "flex w-full flex-col-reverse items-center justify-between gap-4 overflow-auto p-1 sm:flex-row sm:gap-8",
+        'flex w-full flex-col-reverse items-center justify-between gap-4 p-1 sm:flex-row sm:gap-8',
         className,
       )}
       {...props}
     >
-      <div className="flex-1 whitespace-nowrap text-muted-foreground text-sm">
-        {table.getFilteredSelectedRowModel().rows.length} of{" "}
-        {table.getFilteredRowModel().rows.length} row(s) selected.
+      <div className="flex-1 text-sm whitespace-nowrap text-muted-foreground">
+        {rowSelectionEnabled
+          ? `${table.getFilteredSelectedRowModel().rows.length} of ${rowCount} row(s) selected.`
+          : `${rowCount} row(s)`}
       </div>
       <div className="flex flex-col-reverse items-center gap-4 sm:flex-row sm:gap-6 lg:gap-8">
         <div className="flex items-center space-x-2">
-          <p className="whitespace-nowrap font-medium text-sm">Rows per page</p>
+          <p className="text-sm font-medium whitespace-nowrap">Rows per page</p>
           <Select
             value={`${table.getState().pagination.pageSize}`}
             onValueChange={(value) => {
-              table.setPageSize(Number(value));
+              table.setPageSize(Number(value))
             }}
           >
             <SelectTrigger className="h-8 w-18 data-size:h-8">
@@ -60,9 +63,8 @@ export function DataTablePagination<TData>({
             </SelectContent>
           </Select>
         </div>
-        <div className="flex items-center justify-center font-medium text-sm">
-          Page {table.getState().pagination.pageIndex + 1} of{" "}
-          {table.getPageCount()}
+        <div className="flex items-center justify-center text-sm font-medium">
+          Page {currentPage} of {pageCount}
         </div>
         <div className="flex items-center space-x-2">
           <Button
@@ -108,5 +110,5 @@ export function DataTablePagination<TData>({
         </div>
       </div>
     </div>
-  );
+  )
 }
