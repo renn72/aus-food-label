@@ -41,6 +41,8 @@
 		"date-fns": "^4.1.0",
 		"drizzle-orm": "^0.45.1",
 		"embla-carousel-react": "^8.6.0",
+		"uuid": "^13.0.0",
+		"@phospr-icons/react": "^2.1.10",
 		"input-otp": "^1.4.2",
 		"next-themes": "^0.4.6",
 		"nitro": "npm:nitro-nightly@latest",
