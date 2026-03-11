@@ -9,6 +9,8 @@ node_modules
 .DS_Store
 .cache
 .env
+db/*.db
+db/*.db-*
 
 .data
 .vercel

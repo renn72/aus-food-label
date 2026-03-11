@@ -1,14 +1,16 @@
-import "@tanstack/react-start/server-only";
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
+import '@tanstack/react-start/server-only'
+import { createClient } from '@libsql/client'
+import { drizzle } from 'drizzle-orm/libsql'
 
-import { env } from "@/env/server";
-import * as schema from "@/lib/db/schema";
+import { env } from '@/env/server'
+import * as schema from '@/lib/db/schema'
 
-const client = postgres(env.DATABASE_URL);
+const client = createClient({
+  url: env.DATABASE_URL,
+})
 
 export const db = drizzle({
   client,
   schema,
-  casing: "snake_case",
-});
+  casing: 'snake_case',
+})

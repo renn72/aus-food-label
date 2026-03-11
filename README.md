@@ -10,7 +10,7 @@ pnpm create mugnavo
 - TanStack [Start](https://tanstack.com/start/latest) + [Router](https://tanstack.com/router/latest) + [Query](https://tanstack.com/query/latest)
 - [Tailwind CSS](https://tailwindcss.com/) + [shadcn/ui](https://ui.shadcn.com/) + [Base UI](https://base-ui.com/) (base-maia) + [Remix Icon](https://remixicon.com/)
 - [Vite 8](https://vite.dev/blog/announcing-vite8-beta) (beta) + [Nitro v3](https://v3.nitro.build/) (nightly)
-- [Drizzle ORM](https://orm.drizzle.team/) + PostgreSQL
+- [Drizzle ORM](https://orm.drizzle.team/) + SQLite
 - [Better Auth](https://www.better-auth.com/)
 - [Oxlint](https://oxc.rs/docs/guide/usage/linter.html) + [Oxfmt](https://oxc.rs/docs/guide/usage/formatter.html)
 
