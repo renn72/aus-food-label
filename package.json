@@ -24,7 +24,9 @@
     "auth:migrate": "pnpm run auth:generate && pnpm run db generate && pnpm run db migrate"
   },
   "dependencies": {
+    "@fontsource-variable/outfit": "^5.2.8",
     "@base-ui/react": "^1.2.0",
+    "@libsql/client": "^0.17.0",
     "@better-auth/drizzle-adapter": "^1.5.4",
     "@fontsource-variable/dm-sans": "^5.2.8",
     "@remixicon/react": "^4.9.0",
@@ -49,6 +51,7 @@
   "devDependencies": {
     "@commitlint/cli": "^20.4.3",
     "@commitlint/config-conventional": "^20.4.3",
+    "@biomejs/biome": "^2.2.0",
     "@tailwindcss/vite": "^4.2.1",
     "@tanstack/devtools-vite": "^0.5.3",
     "@tanstack/eslint-plugin-query": "^5.91.4",
