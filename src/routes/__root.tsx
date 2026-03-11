@@ -37,7 +37,10 @@ export const Route = createRootRouteWithContext<{
         content: 'Dark-first auth and ingredient management for aus-food-label.',
       },
     ],
-    links: [{ rel: 'stylesheet', href: appCss }],
+    links: [
+      { rel: 'stylesheet', href: appCss },
+      { rel: 'icon', type: 'image/png', href: '/favicon.png' },
+    ],
   }),
   component: RootComponent,
 })
