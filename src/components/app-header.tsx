@@ -1,6 +1,12 @@
-import { RiLoader4Line, RiMoonClearLine, RiSunLine, RiUser3Line } from '@remixicon/react'
+import {
+  RiFileList3Line,
+  RiLoader4Line,
+  RiMoonClearLine,
+  RiSunLine,
+  RiUser3Line,
+} from '@remixicon/react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link, useRouter } from '@tanstack/react-router'
+import { Link, useLocation, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
@@ -15,11 +21,13 @@ export function AppHeader() {
   const { theme, setTheme } = useTheme()
   const queryClient = useQueryClient()
   const router = useRouter()
+  const location = useLocation()
   const { data: user } = useQuery(authQueryOptions())
   const [isSigningOut, setIsSigningOut] = useState(false)
 
   const nextTheme = theme === 'light' ? 'dark' : 'light'
   const themeLabel = nextTheme === 'dark' ? 'Dark mode' : 'Light mode'
+  const isIngredientRoute = location.pathname.startsWith('/ingredient')
 
   const handleSignOut = async () => {
     if (isSigningOut) return
@@ -44,17 +52,31 @@ export function AppHeader() {
   }
 
   return (
-    <header className="flex items-center justify-between gap-4 rounded-full border border-border/70 bg-card/70 px-4 py-3 shadow-lg shadow-black/10 backdrop-blur-sm">
-      <div className="min-w-0">
+    <header className="flex flex-wrap items-center justify-between gap-3 rounded-full border border-border/70 bg-card/70 px-4 py-3 shadow-lg shadow-black/10 backdrop-blur-sm">
+      <Link to={user ? '/app' : '/'} className="min-w-0">
         <p className="text-xs font-medium tracking-[0.35em] text-primary/80 uppercase">
           Aus Food Label
         </p>
         <p className="truncate text-sm text-muted-foreground">
           Ingredients, labels, and nutrition data.
         </p>
-      </div>
+      </Link>
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        {user ? (
+          <Link
+            to="/ingredient"
+            className={buttonVariants({
+              variant: isIngredientRoute ? 'default' : 'outline',
+              size: 'sm',
+              className: 'h-10 rounded-full px-3',
+            })}
+          >
+            <RiFileList3Line className="size-4" />
+            <span className="hidden sm:inline">Ingredients</span>
+          </Link>
+        ) : null}
+
         <Button
           type="button"
           variant="outline"
