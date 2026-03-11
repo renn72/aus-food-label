@@ -1,24 +1,35 @@
 import {
   type ColumnDef,
-  type ColumnFiltersState,
-  type FilterFn,
+  flexRender,
   getCoreRowModel,
-  getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  type PaginationState,
   type SortingFn,
   type SortingState,
+  type Updater,
   useReactTable,
 } from '@tanstack/react-table'
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react'
 import * as React from 'react'
 
 import { CreateIngredientSheet } from '@/components/create-ingredient-sheet'
-import { DataTable } from '@/components/data-table/data-table'
 import { DataTableColumnHeader } from '@/components/data-table/data-table-column-header'
-import { DataTableToolbar } from '@/components/data-table/data-table-toolbar'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import type { IngredientTableRow } from '@/lib/ingredient/functions'
 import { matchesIngredientRow } from '@/lib/ingredient/search'
+import { cn } from '@/lib/utils'
 
 const metricSortingFn: SortingFn<IngredientTableRow> = (rowA, rowB, columnId) => {
   const leftValue = parseMetricNumber(rowA.getValue(columnId))
@@ -39,38 +50,12 @@ const metricSortingFn: SortingFn<IngredientTableRow> = (rowA, rowB, columnId) =>
   return leftValue - rightValue
 }
 
-const ingredientSearchFilterFn: FilterFn<IngredientTableRow> = (row, _columnId, filterValue) => {
-  return matchesIngredientRow(row.original, String(filterValue ?? ''))
-}
-
-const isAusFoodFilterFn: FilterFn<IngredientTableRow> = (row, _columnId, filterValue) => {
-  const selectedValues = Array.isArray(filterValue)
-    ? filterValue.map((value) => String(value))
-    : typeof filterValue === 'string'
-      ? [filterValue]
-      : []
-
-  if (selectedValues.length === 0) {
-    return true
-  }
-
-  const value = row.original.isAusFood ? 'yes' : 'no'
-  return selectedValues.includes(value)
-}
-
 const columns: ColumnDef<IngredientTableRow>[] = [
   {
     accessorKey: 'name',
     enableHiding: false,
-    enableColumnFilter: true,
-    filterFn: ingredientSearchFilterFn,
     minSize: 320,
     size: 360,
-    meta: {
-      label: 'Search',
-      placeholder: 'Search ingredients or nutrients',
-      variant: 'text',
-    },
     header: ({ column }) => <DataTableColumnHeader column={column} label="Name" />,
     cell: ({ getValue }) => (
       <div className="min-w-64 font-medium text-foreground">{formatMetric(getValue())}</div>
@@ -78,23 +63,7 @@ const columns: ColumnDef<IngredientTableRow>[] = [
   },
   {
     accessorKey: 'isAusFood',
-    enableColumnFilter: true,
-    filterFn: isAusFoodFilterFn,
     size: 140,
-    meta: {
-      label: 'Aus food',
-      variant: 'select',
-      options: [
-        {
-          label: 'Aus food',
-          value: 'yes',
-        },
-        {
-          label: 'Custom',
-          value: 'no',
-        },
-      ],
-    },
     header: ({ column }) => <DataTableColumnHeader column={column} label="Aus food" />,
     cell: ({ getValue }) => {
       const isAusFood = getValue() === true
@@ -200,68 +169,228 @@ const columns: ColumnDef<IngredientTableRow>[] = [
 
 export function IngredientTable({ rows }: { readonly rows: IngredientTableRow[] }) {
   const [sorting, setSorting] = React.useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
+  const [searchQuery, setSearchQuery] = React.useState('')
+  const [sourceFilter, setSourceFilter] = React.useState<'all' | 'yes' | 'no'>('all')
+  const [pagination, setPagination] = React.useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 50,
+  })
+
+  const filteredRows = React.useMemo(() => {
+    return rows.filter((row) => {
+      if (sourceFilter !== 'all' && (row.isAusFood ? 'yes' : 'no') !== sourceFilter) {
+        return false
+      }
+
+      return matchesIngredientRow(row, searchQuery)
+    })
+  }, [rows, searchQuery, sourceFilter])
+
+  React.useEffect(() => {
+    setPagination((current) => ({ ...current, pageIndex: 0 }))
+  }, [searchQuery, sourceFilter])
+
+  React.useEffect(() => {
+    const maxPageIndex =
+      filteredRows.length === 0
+        ? 0
+        : Math.max(Math.ceil(filteredRows.length / pagination.pageSize) - 1, 0)
+
+    if (pagination.pageIndex > maxPageIndex) {
+      setPagination((current) => ({ ...current, pageIndex: maxPageIndex }))
+    }
+  }, [filteredRows.length, pagination.pageIndex, pagination.pageSize])
+
+  const handlePaginationChange = React.useCallback((updaterOrValue: Updater<PaginationState>) => {
+    setPagination((current) =>
+      typeof updaterOrValue === 'function' ? updaterOrValue(current) : updaterOrValue,
+    )
+  }, [])
 
   // oxlint-disable-next-line react-hooks-js/incompatible-library
   const table = useReactTable({
-    data: rows,
+    data: filteredRows,
     columns,
     getRowId: (row) => String(row.id),
-    initialState: {
-      pagination: {
-        pageSize: 50,
-      },
-    },
     state: {
       sorting,
-      columnFilters,
+      pagination,
     },
     onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
+    onPaginationChange: handlePaginationChange,
     getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   })
-  const filteredRowCount = table.getFilteredRowModel().rows.length
+  const filteredRowCount = filteredRows.length
+  const pageCount = filteredRowCount === 0 ? 0 : table.getPageCount()
+  const currentPage = filteredRowCount === 0 ? 0 : pagination.pageIndex + 1
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border border-border/70 bg-card/70 p-4 shadow-xl shadow-black/10 backdrop-blur-sm">
-      <DataTable
-        table={table}
-        className="min-h-0 flex-1"
-        containerClassName="rounded-2xl border-border/70 bg-background/40"
-        viewportClassName="h-full"
-        tableClassName="min-w-[78rem]"
-        paginationClassName="px-1"
-        pageSizeOptions={[25, 50, 100, 250]}
-        stickyHeader
-        stickyHeaderBackground="var(--card)"
-      >
-        <DataTableToolbar
-          table={table}
-          searchColumnId="name"
-          searchPlaceholder="Search ingredients or nutrients"
-          selectFilters={[
-            {
-              columnId: 'isAusFood',
-              title: 'Aus food',
-              allLabel: 'All sources',
-              options: [
-                { label: 'Aus food', value: 'yes' },
-                { label: 'Custom', value: 'no' },
-              ],
-            },
-          ]}
-        >
-          <div className="flex items-center gap-2">
-            <div className="rounded-full border border-border/70 bg-background/70 px-3 py-1.5 text-sm font-medium">
-              {filteredRowCount} / {rows.length}
-            </div>
-            <CreateIngredientSheet />
+      <div className="flex w-full flex-wrap items-start justify-between gap-3 p-1">
+        <div className="flex flex-1 flex-wrap items-center gap-2">
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Search ingredients or nutrients"
+            className={cn(
+              'h-8 w-full min-w-56 rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 sm:max-w-sm',
+              'dark:bg-input/30',
+            )}
+          />
+
+          <NativeSelect
+            value={sourceFilter}
+            onChange={(event) => setSourceFilter(event.target.value as 'all' | 'yes' | 'no')}
+            className="min-w-40"
+          >
+            <NativeSelectOption value="all">All sources</NativeSelectOption>
+            <NativeSelectOption value="yes">Aus food</NativeSelectOption>
+            <NativeSelectOption value="no">Custom</NativeSelectOption>
+          </NativeSelect>
+
+          {(searchQuery || sourceFilter !== 'all') && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSearchQuery('')
+                setSourceFilter('all')
+              }}
+            >
+              Reset
+            </Button>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <div className="rounded-full border border-border/70 bg-background/70 px-3 py-1.5 text-sm font-medium">
+            {filteredRowCount} / {rows.length}
           </div>
-        </DataTableToolbar>
-      </DataTable>
+          <CreateIngredientSheet />
+        </div>
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-hidden rounded-2xl border border-border/70 bg-background/40">
+        <ScrollArea className="h-full w-full">
+          <Table className="min-w-[78rem]">
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead
+                      key={header.id}
+                      colSpan={header.colSpan}
+                      className="sticky top-0 z-20 backdrop-blur-sm"
+                      style={{ width: header.getSize(), background: 'var(--card)' }}
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              ))}
+            </TableHeader>
+
+            <TableBody>
+              {table.getRowModel().rows.length > 0 ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow key={row.id}>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id} style={{ width: cell.column.getSize() }}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={table.getAllLeafColumns().length}
+                    className="h-24 text-center"
+                  >
+                    No results.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </ScrollArea>
+      </div>
+
+      <div className="flex w-full flex-col-reverse items-center justify-between gap-4 p-1 sm:flex-row sm:gap-8">
+        <div className="flex-1 text-sm text-muted-foreground">{filteredRowCount} row(s)</div>
+
+        <div className="flex flex-col-reverse items-center gap-4 sm:flex-row sm:gap-6 lg:gap-8">
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-medium whitespace-nowrap">Rows per page</p>
+            <NativeSelect
+              value={String(pagination.pageSize)}
+              onChange={(event) => {
+                setPagination({
+                  pageIndex: 0,
+                  pageSize: Number(event.target.value),
+                })
+              }}
+              className="w-18"
+            >
+              {[25, 50, 100, 250].map((pageSize) => (
+                <NativeSelectOption key={pageSize} value={String(pageSize)}>
+                  {pageSize}
+                </NativeSelectOption>
+              ))}
+            </NativeSelect>
+          </div>
+
+          <div className="text-sm font-medium whitespace-nowrap">
+            Page {currentPage} of {pageCount}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              aria-label="Go to first page"
+              variant="outline"
+              size="icon-sm"
+              className="hidden lg:flex"
+              onClick={() => table.setPageIndex(0)}
+              disabled={!table.getCanPreviousPage()}
+            >
+              <ChevronsLeft />
+            </Button>
+            <Button
+              aria-label="Go to previous page"
+              variant="outline"
+              size="icon-sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              <ChevronLeft />
+            </Button>
+            <Button
+              aria-label="Go to next page"
+              variant="outline"
+              size="icon-sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              <ChevronRight />
+            </Button>
+            <Button
+              aria-label="Go to last page"
+              variant="outline"
+              size="icon-sm"
+              className="hidden lg:flex"
+              onClick={() => table.setPageIndex(Math.max(table.getPageCount() - 1, 0))}
+              disabled={!table.getCanNextPage()}
+            >
+              <ChevronsRight />
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
