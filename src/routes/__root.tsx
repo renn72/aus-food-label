@@ -1,19 +1,25 @@
 /// <reference types="vite/client" />
-import { TanStackDevtools } from '@tanstack/react-devtools'
-import type { QueryClient } from '@tanstack/react-query'
-import { ReactQueryDevtoolsPanel } from '@tanstack/react-query-devtools'
-import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from '@tanstack/react-router'
-import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
+import { TanStackDevtools } from "@tanstack/react-devtools";
+import type { QueryClient } from "@tanstack/react-query";
+import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";
+import {
+  createRootRouteWithContext,
+  HeadContent,
+  Outlet,
+  Scripts,
+} from "@tanstack/react-router";
+import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 
-import { ThemeProvider } from '@/components/theme-provider'
-import { Toaster } from '@/components/ui/sonner'
-import type { AuthQueryResult } from '@/lib/auth/queries'
+import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
+import type { AuthQueryResult } from "@/lib/auth/queries";
 
-import appCss from '@/styles.css?url'
+import appCss from "@/styles.css?url";
 
 export const Route = createRootRouteWithContext<{
-  queryClient: QueryClient
-  user: AuthQueryResult
+  queryClient: QueryClient;
+  user: AuthQueryResult;
 }>()({
   // Typically we don't need the user immediately in landing pages.
   // For protected routes with loader data, see /_auth/route.tsx
@@ -23,34 +29,35 @@ export const Route = createRootRouteWithContext<{
   head: () => ({
     meta: [
       {
-        charSet: 'utf-8',
+        charSet: "utf-8",
       },
       {
-        name: 'viewport',
-        content: 'width=device-width, initial-scale=1',
+        name: "viewport",
+        content: "width=device-width, initial-scale=1",
       },
       {
-        title: 'WSYS | Aus Food Label',
+        title: "WSYS | Aus Food Label",
       },
       {
-        name: 'description',
-        content: 'WSYS branding, dark-first auth, and ingredient management for Aus Food Label.',
+        name: "description",
+        content:
+          "WSYS branding, dark-first auth, and ingredient management for Aus Food Label.",
       },
     ],
     links: [
-      { rel: 'stylesheet', href: appCss },
-      { rel: 'icon', type: 'image/png', href: '/favicon.png' },
+      { rel: "stylesheet", href: appCss },
+      { rel: "icon", type: "image/png", href: "/favicon.png" },
     ],
   }),
   component: RootComponent,
-})
+});
 
 function RootComponent() {
   return (
     <RootDocument>
       <Outlet />
     </RootDocument>
-  )
+  );
 }
 
 function RootDocument({ children }: { readonly children: React.ReactNode }) {
@@ -61,19 +68,20 @@ function RootDocument({ children }: { readonly children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <ThemeProvider defaultTheme="dark">
-          {children}
-          <Toaster richColors />
-        </ThemeProvider>
-
+        <NuqsAdapter>
+          <ThemeProvider defaultTheme="dark">
+            {children}
+            <Toaster richColors />
+          </ThemeProvider>
+        </NuqsAdapter>
         <TanStackDevtools
           plugins={[
             {
-              name: 'TanStack Query',
+              name: "TanStack Query",
               render: <ReactQueryDevtoolsPanel />,
             },
             {
-              name: 'TanStack Router',
+              name: "TanStack Router",
               render: <TanStackRouterDevtoolsPanel />,
             },
           ]}
@@ -82,5 +90,5 @@ function RootDocument({ children }: { readonly children: React.ReactNode }) {
         <Scripts />
       </body>
     </html>
-  )
+  );
 }
