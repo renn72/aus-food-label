@@ -1,66 +1,41 @@
 import type { IngredientTableRow } from '@/lib/ingredient/functions'
 
-export function searchIngredientRows(rows: IngredientTableRow[], query: string) {
+export function matchesIngredientRow(row: IngredientTableRow, query: string) {
   const normalizedQuery = normalizeText(query)
 
   if (!normalizedQuery) {
-    return rows
+    return true
   }
 
   const queryTokens = normalizedQuery.split(' ').filter(Boolean)
+  const searchableValues = [
+    normalizeText(row.name),
+    normalizeText(row.isAusFood ? 'aus food imported' : 'custom ingredient user created'),
+    normalizeText(row.calories),
+    normalizeText(row.energy),
+    normalizeText(row.protein),
+    normalizeText(row.fatTotal),
+    normalizeText(row.fatSaturated),
+    normalizeText(row.carbohydrate),
+    normalizeText(row.sugar),
+    normalizeText(row.dietaryFibre),
+    normalizeText(row.sodium),
+  ]
+  const normalizedName = searchableValues[0]
+  const haystack = searchableValues.join(' ').trim()
 
-  return rows
-    .map((row, index) => {
-      const searchableValues = [
-        normalizeText(row.name),
-        normalizeText(row.isAusFood ? 'aus food imported' : 'custom ingredient user created'),
-        normalizeText(row.calories),
-        normalizeText(row.energy),
-        normalizeText(row.protein),
-        normalizeText(row.fatTotal),
-        normalizeText(row.fatSaturated),
-        normalizeText(row.carbohydrate),
-        normalizeText(row.sugar),
-        normalizeText(row.dietaryFibre),
-        normalizeText(row.sodium),
-      ]
-      const normalizedName = searchableValues[0]
-      const haystack = searchableValues.join(' ').trim()
+  if (!haystack) {
+    return false
+  }
 
-      if (!haystack) {
-        return null
-      }
-
-      const score = scoreIngredientRow({
-        haystack,
-        normalizedName,
-        normalizedQuery,
-        queryTokens,
-      })
-
-      if (score === Number.NEGATIVE_INFINITY) {
-        return null
-      }
-
-      return { row, index, score }
-    })
-    .filter((result) => result !== null)
-    .sort((left, right) => {
-      if (right.score !== left.score) {
-        return right.score - left.score
-      }
-
-      const leftName = left.row.name ?? ''
-      const rightName = right.row.name ?? ''
-      const alphabetical = leftName.localeCompare(rightName)
-
-      if (alphabetical !== 0) {
-        return alphabetical
-      }
-
-      return left.index - right.index
-    })
-    .map((result) => result.row)
+  return (
+    scoreIngredientRow({
+      haystack,
+      normalizedName,
+      normalizedQuery,
+      queryTokens,
+    }) !== Number.NEGATIVE_INFINITY
+  )
 }
 
 function scoreIngredientRow({

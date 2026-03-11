@@ -1,12 +1,13 @@
-import { type ColumnDef, type SortingFn } from '@tanstack/react-table'
-import * as React from 'react'
+import { type ColumnDef, type FilterFn, type SortingFn } from '@tanstack/react-table'
 
 import { DataTable } from '@/components/data-table/data-table'
 import { DataTableColumnHeader } from '@/components/data-table/data-table-column-header'
-import { DataTableViewOptions } from '@/components/data-table/data-table-view-options'
+import { DataTableToolbar } from '@/components/data-table/data-table-toolbar'
+import { CreateIngredientSheet } from '@/components/create-ingredient-sheet'
 import { Badge } from '@/components/ui/badge'
 import { useDataTable } from '@/hooks/use-data-table'
 import type { IngredientTableRow } from '@/lib/ingredient/functions'
+import { matchesIngredientRow } from '@/lib/ingredient/search'
 
 const metricSortingFn: SortingFn<IngredientTableRow> = (rowA, rowB, columnId) => {
   const leftValue = parseMetricNumber(rowA.getValue(columnId))
@@ -27,14 +28,37 @@ const metricSortingFn: SortingFn<IngredientTableRow> = (rowA, rowB, columnId) =>
   return leftValue - rightValue
 }
 
+const ingredientSearchFilterFn: FilterFn<IngredientTableRow> = (row, _columnId, filterValue) => {
+  return matchesIngredientRow(row.original, String(filterValue ?? ''))
+}
+
+const isAusFoodFilterFn: FilterFn<IngredientTableRow> = (row, _columnId, filterValue) => {
+  const selectedValues = Array.isArray(filterValue)
+    ? filterValue.map((value) => String(value))
+    : typeof filterValue === 'string'
+      ? [filterValue]
+      : []
+
+  if (selectedValues.length === 0) {
+    return true
+  }
+
+  const value = row.original.isAusFood ? 'yes' : 'no'
+  return selectedValues.includes(value)
+}
+
 const columns: ColumnDef<IngredientTableRow>[] = [
   {
     accessorKey: 'name',
     enableHiding: false,
+    enableColumnFilter: true,
+    filterFn: ingredientSearchFilterFn,
     minSize: 320,
     size: 360,
     meta: {
-      label: 'Name',
+      label: 'Search',
+      placeholder: 'Search ingredients or nutrients',
+      variant: 'text',
     },
     header: ({ column }) => <DataTableColumnHeader column={column} label="Name" />,
     cell: ({ getValue }) => (
@@ -43,9 +67,22 @@ const columns: ColumnDef<IngredientTableRow>[] = [
   },
   {
     accessorKey: 'isAusFood',
+    enableColumnFilter: true,
+    filterFn: isAusFoodFilterFn,
     size: 140,
     meta: {
       label: 'Aus food',
+      variant: 'select',
+      options: [
+        {
+          label: 'Aus food',
+          value: 'yes',
+        },
+        {
+          label: 'Custom',
+          value: 'no',
+        },
+      ],
     },
     header: ({ column }) => <DataTableColumnHeader column={column} label="Aus food" />,
     cell: ({ getValue }) => {
@@ -152,13 +189,7 @@ const columns: ColumnDef<IngredientTableRow>[] = [
   },
 ]
 
-export function IngredientTable({
-  rows,
-  query,
-}: {
-  readonly rows: IngredientTableRow[]
-  readonly query: string
-}) {
+export function IngredientTable({ rows }: { readonly rows: IngredientTableRow[] }) {
   const { table } = useDataTable({
     data: rows,
     columns,
@@ -182,16 +213,7 @@ export function IngredientTable({
       joinOperator: 'ingredientJoinOperator',
     },
   })
-  const previousQueryRef = React.useRef(query)
-
-  React.useEffect(() => {
-    if (previousQueryRef.current === query) {
-      return
-    }
-
-    previousQueryRef.current = query
-    table.setPageIndex(0)
-  }, [query, table])
+  const filteredRowCount = table.getFilteredRowModel().rows.length
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-3xl border border-border/70 bg-card/70 p-4 shadow-xl shadow-black/10 backdrop-blur-sm">
@@ -206,9 +228,14 @@ export function IngredientTable({
         stickyHeader
         stickyHeaderBackground="var(--card)"
       >
-        <div className="flex items-center justify-end">
-          <DataTableViewOptions table={table} align="end" />
-        </div>
+        <DataTableToolbar table={table}>
+          <div className="flex items-center gap-2">
+            <div className="rounded-full border border-border/70 bg-background/70 px-3 py-1.5 text-sm font-medium">
+              {filteredRowCount} / {rows.length}
+            </div>
+            <CreateIngredientSheet />
+          </div>
+        </DataTableToolbar>
       </DataTable>
     </div>
   )
