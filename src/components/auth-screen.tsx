@@ -40,7 +40,10 @@ export function AuthScreen({
   defaultMode = "login",
   redirectUrl,
 }: AuthScreenProps) {
-  const [mode, setMode] = useState<AuthMode>(defaultMode);
+  const isSignupDisabled = true;
+  const [mode, setMode] = useState<AuthMode>(
+    defaultMode === "signup" ? "login" : defaultMode,
+  );
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -150,8 +153,8 @@ export function AuthScreen({
             <CardHeader className="pb-5 border-b border-border/70">
               <CardTitle className="text-2xl">Access the app</CardTitle>
               <CardDescription>
-                Sign in to the WSYS workspace or create a new Aus Food Label
-                account.
+                Sign in to the WSYS workspace. New account creation is
+                currently disabled.
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
@@ -162,7 +165,9 @@ export function AuthScreen({
               >
                 <TabsList className="grid grid-cols-2 w-full">
                   <TabsTrigger value="login">Log in</TabsTrigger>
-                  <TabsTrigger value="signup">Sign up</TabsTrigger>
+                  <TabsTrigger value="signup" disabled={isSignupDisabled}>
+                    Sign up
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="login">
@@ -203,20 +208,16 @@ export function AuthScreen({
                       {isLoginPending ? "Logging in..." : "Log in"}
                     </Button>
                     <p className="text-sm text-center text-muted-foreground">
-                      Need an account?{" "}
-                      <button
-                        type="button"
-                        className="font-medium transition-opacity hover:opacity-80 text-primary"
-                        onClick={() => setMode("signup")}
-                      >
-                        Create one
-                      </button>
+                      New account creation is currently disabled.
                     </p>
                   </form>
                 </TabsContent>
 
                 <TabsContent value="signup">
                   <form className="grid gap-5" onSubmit={handleSignupSubmit}>
+                    <p className="text-sm text-center text-muted-foreground">
+                      Sign up is currently disabled for this workspace.
+                    </p>
                     <div className="grid gap-2">
                       <Label htmlFor="signup-name">Name</Label>
                       <Input
@@ -225,7 +226,7 @@ export function AuthScreen({
                         type="text"
                         autoComplete="name"
                         placeholder="Your name"
-                        readOnly={isPending}
+                        disabled
                         required
                       />
                     </div>
@@ -237,7 +238,7 @@ export function AuthScreen({
                         type="email"
                         autoComplete="email"
                         placeholder="hello@example.com"
-                        readOnly={isPending}
+                        disabled
                         required
                       />
                     </div>
@@ -249,7 +250,7 @@ export function AuthScreen({
                         type="password"
                         autoComplete="new-password"
                         placeholder="Create a password"
-                        readOnly={isPending}
+                        disabled
                         required
                       />
                     </div>
@@ -263,7 +264,7 @@ export function AuthScreen({
                         type="password"
                         autoComplete="new-password"
                         placeholder="Confirm your password"
-                        readOnly={isPending}
+                        disabled
                         required
                       />
                     </div>
@@ -271,14 +272,9 @@ export function AuthScreen({
                       className="mt-2 w-full"
                       type="submit"
                       size="lg"
-                      disabled={isPending}
+                      disabled
                     >
-                      {isSignupPending && (
-                        <RiLoader4Line className="animate-spin" />
-                      )}
-                      {isSignupPending
-                        ? "Creating account..."
-                        : "Create account"}
+                      Create account
                     </Button>
                     <p className="text-sm text-center text-muted-foreground">
                       Already have an account?{" "}
