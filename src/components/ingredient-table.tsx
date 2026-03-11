@@ -17,8 +17,14 @@ import { CreateIngredientSheet } from '@/components/create-ingredient-sheet'
 import { DataTableColumnHeader } from '@/components/data-table/data-table-column-header'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -241,15 +247,19 @@ export function IngredientTable({ rows }: { readonly rows: IngredientTableRow[] 
             )}
           />
 
-          <NativeSelect
+          <Select
             value={sourceFilter}
-            onChange={(event) => setSourceFilter(event.target.value as 'all' | 'yes' | 'no')}
-            className="min-w-40"
+            onValueChange={(value) => setSourceFilter(value as 'all' | 'yes' | 'no')}
           >
-            <NativeSelectOption value="all">All sources</NativeSelectOption>
-            <NativeSelectOption value="yes">Aus food</NativeSelectOption>
-            <NativeSelectOption value="no">Custom</NativeSelectOption>
-          </NativeSelect>
+            <SelectTrigger className="min-w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All sources</SelectItem>
+              <SelectItem value="yes">Aus food</SelectItem>
+              <SelectItem value="no">Custom</SelectItem>
+            </SelectContent>
+          </Select>
 
           {(searchQuery || sourceFilter !== 'all') && (
             <Button
@@ -327,22 +337,26 @@ export function IngredientTable({ rows }: { readonly rows: IngredientTableRow[] 
         <div className="flex flex-col-reverse items-center gap-4 sm:flex-row sm:gap-6 lg:gap-8">
           <div className="flex items-center gap-2">
             <p className="text-sm font-medium whitespace-nowrap">Rows per page</p>
-            <NativeSelect
+            <Select
               value={String(pagination.pageSize)}
-              onChange={(event) => {
+              onValueChange={(value) => {
                 setPagination({
                   pageIndex: 0,
-                  pageSize: Number(event.target.value),
+                  pageSize: Number(value),
                 })
               }}
-              className="w-18"
             >
-              {[25, 50, 100, 250].map((pageSize) => (
-                <NativeSelectOption key={pageSize} value={String(pageSize)}>
-                  {pageSize}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
+              <SelectTrigger className="w-18">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {[25, 50, 100, 250].map((pageSize) => (
+                  <SelectItem key={pageSize} value={String(pageSize)}>
+                    {pageSize}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="text-sm font-medium whitespace-nowrap">
