@@ -1,24 +1,14 @@
 import { z } from 'zod'
 
 const positiveMetricSchema = z.coerce.number().positive().max(1_000_000)
-
-const optionalPositiveMetricSchema = z.preprocess(
-  (value) => {
-    if (value === '' || value === null || value === undefined) {
-      return null
-    }
-
-    return value
-  },
-  z.coerce.number().positive().max(1_000_000).nullable(),
-)
+const positivePercentageSchema = z.coerce.number().positive().max(1_000)
 
 export const createRecipeSchema = z
   .object({
     name: z.string().trim().min(1).max(160),
-    outputNetWeight: optionalPositiveMetricSchema,
+    outputScalePercent: positivePercentageSchema,
+    productWeight: positiveMetricSchema,
     serveSize: positiveMetricSchema,
-    servingsPerPack: positiveMetricSchema,
     ingredients: z
       .array(
         z.object({
@@ -44,6 +34,14 @@ export const createRecipeSchema = z
 
       seenIngredientIds.add(ingredient.ingredientId)
     })
+
+    if (data.productWeight < data.serveSize) {
+      context.addIssue({
+        code: 'custom',
+        path: ['productWeight'],
+        message: 'Product weight must be greater than or equal to serve weight.',
+      })
+    }
   })
 
 export type CreateRecipeInput = z.infer<typeof createRecipeSchema>

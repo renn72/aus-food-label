@@ -19,6 +19,7 @@ export const recipe = sqliteTable(
       }),
     name: text('name').notNull(),
     outputNetWeight: real('output_net_weight'),
+    productWeight: real('product_weight'),
     serveSize: real('serve_size').notNull(),
     servingsPerPack: real('servings_per_pack').notNull(),
   },

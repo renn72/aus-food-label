@@ -20,9 +20,9 @@ type RecipeIngredientDraft = {
 
 type CreateRecipePayload = {
   name: string
-  outputNetWeight: number | null
+  outputScalePercent: number
+  productWeight: number
   serveSize: number
-  servingsPerPack: number
   ingredients: Array<{
     ingredientId: number
     quantity: number
@@ -39,9 +39,9 @@ export function CreateRecipeForm({
   const router = useRouter()
   const nextIngredientRowIdRef = useRef(1)
   const [name, setName] = useState('')
-  const [outputNetWeight, setOutputNetWeight] = useState('')
+  const [outputScalePercent, setOutputScalePercent] = useState('100')
+  const [productWeight, setProductWeight] = useState('100')
   const [serveSize, setServeSize] = useState('100')
-  const [servingsPerPack, setServingsPerPack] = useState('1')
   const [ingredientRows, setIngredientRows] = useState<RecipeIngredientDraft[]>(() => [
     createInitialIngredientRow(),
   ])
@@ -61,9 +61,9 @@ export function CreateRecipeForm({
     mutationFn: async (payload: CreateRecipePayload) => await $createRecipe({ data: payload }),
     onSuccess: async () => {
       setName('')
-      setOutputNetWeight('')
+      setOutputScalePercent('100')
+      setProductWeight('100')
       setServeSize('100')
-      setServingsPerPack('1')
       nextIngredientRowIdRef.current = 1
       setIngredientRows([createInitialIngredientRow()])
       await router.invalidate()
@@ -79,9 +79,12 @@ export function CreateRecipeForm({
     (total, row) => total + parseMetricInput(row.quantity),
     0,
   )
-  const effectiveNetWeight = outputNetWeight.trim()
-    ? parseMetricInput(outputNetWeight)
-    : rawNetWeight
+  const parsedOutputScalePercent = parseMetricInput(outputScalePercent)
+  const parsedProductWeight = parseMetricInput(productWeight)
+  const parsedServeSize = parseMetricInput(serveSize)
+  const effectiveOutputWeight = (rawNetWeight * parsedOutputScalePercent) / 100
+  const effectiveServingsPerPack =
+    parsedProductWeight > 0 && parsedServeSize > 0 ? parsedProductWeight / parsedServeSize : 0
 
   const handleSubmit = (event: RecipeFormSubmitEvent) => {
     event.preventDefault()
@@ -92,9 +95,9 @@ export function CreateRecipeForm({
 
     const payload = buildPayload({
       name,
-      outputNetWeight,
+      outputScalePercent,
+      productWeight,
       serveSize,
-      servingsPerPack,
       ingredientRows,
     })
 
@@ -127,24 +130,44 @@ export function CreateRecipeForm({
             />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 lg:grid-cols-3">
             <div className="grid gap-2">
-              <Label htmlFor="recipe-output-net-weight">Output net weight (g)</Label>
+              <Label htmlFor="recipe-output-scale-percent">Output yield (% of input)</Label>
               <Input
-                id="recipe-output-net-weight"
-                value={outputNetWeight}
-                onChange={(event) => setOutputNetWeight(event.target.value)}
+                id="recipe-output-scale-percent"
+                value={outputScalePercent}
+                onChange={(event) => setOutputScalePercent(event.target.value)}
                 type="number"
-                min="0"
+                min="0.01"
                 step="0.01"
                 inputMode="decimal"
-                placeholder="Optional"
+                placeholder="100"
                 readOnly={isPending}
+                required
+              />
+              <p className="text-xs leading-5 text-muted-foreground">
+                Output weight will be {formatWeightValue(effectiveOutputWeight)} g from{' '}
+                {formatWeightValue(rawNetWeight)} g of input ingredients.
+              </p>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="recipe-product-weight">Product weight (g)</Label>
+              <Input
+                id="recipe-product-weight"
+                value={productWeight}
+                onChange={(event) => setProductWeight(event.target.value)}
+                type="number"
+                min="0.01"
+                step="0.01"
+                inputMode="decimal"
+                readOnly={isPending}
+                required
               />
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="recipe-serve-size">Serve size (g)</Label>
+              <Label htmlFor="recipe-serve-size">Serve weight (g)</Label>
               <Input
                 id="recipe-serve-size"
                 value={serveSize}
@@ -157,21 +180,6 @@ export function CreateRecipeForm({
                 required
               />
             </div>
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="recipe-servings-per-pack">Servings per pack</Label>
-            <Input
-              id="recipe-servings-per-pack"
-              value={servingsPerPack}
-              onChange={(event) => setServingsPerPack(event.target.value)}
-              type="number"
-              min="0.01"
-              step="0.01"
-              inputMode="decimal"
-              readOnly={isPending}
-              required
-            />
           </div>
 
           <section className="space-y-4">
@@ -283,13 +291,29 @@ export function CreateRecipeForm({
                 <span className="font-medium">{formatWeightValue(rawNetWeight)} g</span>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <span className="text-muted-foreground">Panel net weight</span>
-                <span className="font-medium">{formatWeightValue(effectiveNetWeight)} g</span>
+                <span className="text-muted-foreground">Output weight</span>
+                <span className="font-medium">{formatWeightValue(effectiveOutputWeight)} g</span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">Product weight</span>
+                <span className="font-medium">{formatWeightValue(parsedProductWeight)} g</span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">Serve weight</span>
+                <span className="font-medium">{formatWeightValue(parsedServeSize)} g</span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">Servings per package</span>
+                <span className="font-medium">{formatWeightValue(effectiveServingsPerPack)}</span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">Output yield</span>
+                <span className="font-medium">{formatWeightValue(parsedOutputScalePercent)}%</span>
               </div>
             </div>
             <p className="mt-3 text-xs leading-5 text-muted-foreground">
-              When output net weight is left blank, the nutrition panel falls back to the summed
-              ingredient weight.
+              Servings per package are derived from product weight divided by serve weight. Output
+              yield scales from the total input ingredient weight.
             </p>
           </div>
 
@@ -340,15 +364,15 @@ function IngredientPicker({
 
 function buildPayload({
   name,
-  outputNetWeight,
+  outputScalePercent,
+  productWeight,
   serveSize,
-  servingsPerPack,
   ingredientRows,
 }: {
   name: string
-  outputNetWeight: string
+  outputScalePercent: string
+  productWeight: string
   serveSize: string
-  servingsPerPack: string
   ingredientRows: RecipeIngredientDraft[]
 }): CreateRecipePayload | null {
   const trimmedName = name.trim()
@@ -382,26 +406,30 @@ function buildPayload({
     return null
   }
 
+  const parsedOutputScalePercent = parseMetricInput(outputScalePercent)
+  const parsedProductWeight = parseMetricInput(productWeight)
   const parsedServeSize = parseMetricInput(serveSize)
-  const parsedServingsPerPack = parseMetricInput(servingsPerPack)
 
-  if (parsedServeSize <= 0 || parsedServingsPerPack <= 0) {
-    toast.error('Serve size and servings per pack must both be greater than zero.')
+  if (parsedOutputScalePercent <= 0) {
+    toast.error('Output yield must be greater than zero.')
     return null
   }
 
-  const parsedOutputNetWeight = outputNetWeight.trim() ? parseMetricInput(outputNetWeight) : null
+  if (parsedProductWeight <= 0 || parsedServeSize <= 0) {
+    toast.error('Product weight and serve weight must both be greater than zero.')
+    return null
+  }
 
-  if (parsedOutputNetWeight !== null && parsedOutputNetWeight <= 0) {
-    toast.error('Output net weight must be greater than zero when provided.')
+  if (parsedProductWeight < parsedServeSize) {
+    toast.error('Product weight must be greater than or equal to serve weight.')
     return null
   }
 
   return {
     name: trimmedName,
-    outputNetWeight: parsedOutputNetWeight,
+    outputScalePercent: parsedOutputScalePercent,
+    productWeight: parsedProductWeight,
     serveSize: parsedServeSize,
-    servingsPerPack: parsedServingsPerPack,
     ingredients: recipeIngredients.map((ingredient) => ({
       ingredientId: ingredient.ingredientId as number,
       quantity: ingredient.quantity,

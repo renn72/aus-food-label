@@ -24,6 +24,7 @@ type RecipeRow = {
   recipeId: number
   recipeName: string
   outputNetWeight: number | null
+  productWeight: number | null
   serveSize: number
   servingsPerPack: number
   recipeIngredientId: number | null
@@ -63,6 +64,7 @@ export const $getRecipeWorkspaceData = createServerFn({ method: 'GET' }).handler
       recipeId: recipe.id,
       recipeName: recipe.name,
       outputNetWeight: recipe.outputNetWeight,
+      productWeight: recipe.productWeight,
       serveSize: recipe.serveSize,
       servingsPerPack: recipe.servingsPerPack,
       recipeIngredientId: recipeIngredient.id,
@@ -93,6 +95,7 @@ export const $getRecipeWorkspaceData = createServerFn({ method: 'GET' }).handler
     panel: calculateRecipeNutrition({
       ingredients: recipeRecord.ingredients,
       outputNetWeight: recipeRecord.outputNetWeight,
+      productWeight: recipeRecord.productWeight,
       serveSize: recipeRecord.serveSize,
       servingsPerPack: recipeRecord.servingsPerPack,
     }),
@@ -114,6 +117,12 @@ export const $createRecipe = createServerFn({ method: 'POST' })
     }
 
     const ingredientIds = data.ingredients.map((ingredientEntry) => ingredientEntry.ingredientId)
+    const baseInputWeight = data.ingredients.reduce(
+      (total, ingredientEntry) => total + ingredientEntry.quantity,
+      0,
+    )
+    const outputNetWeight = (baseInputWeight * data.outputScalePercent) / 100
+    const servingsPerPack = data.productWeight / data.serveSize
 
     return await db.transaction(async (tx) => {
       const visibleIngredients = await tx
@@ -137,9 +146,10 @@ export const $createRecipe = createServerFn({ method: 'POST' })
         .values({
           userId: user.id,
           name: data.name,
-          outputNetWeight: data.outputNetWeight,
+          outputNetWeight,
+          productWeight: data.productWeight,
           serveSize: data.serveSize,
-          servingsPerPack: data.servingsPerPack,
+          servingsPerPack,
         })
         .returning({
           id: recipe.id,
@@ -165,6 +175,7 @@ function groupRecipeRows(rows: RecipeRow[]) {
       id: number
       name: string
       outputNetWeight: number | null
+      productWeight: number | null
       serveSize: number
       servingsPerPack: number
       ingredients: RecipeNutritionIngredient[]
@@ -179,6 +190,7 @@ function groupRecipeRows(rows: RecipeRow[]) {
         id: row.recipeId,
         name: row.recipeName,
         outputNetWeight: row.outputNetWeight,
+        productWeight: row.productWeight,
         serveSize: row.serveSize,
         servingsPerPack: row.servingsPerPack,
         ingredients: [],
