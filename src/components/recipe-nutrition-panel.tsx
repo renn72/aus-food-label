@@ -3,8 +3,19 @@
 import { RiDeleteBin6Line, RiFileCopyLine, RiRestaurantLine } from '@remixicon/react'
 import { useMutation } from '@tanstack/react-query'
 import { useRouter } from '@tanstack/react-router'
+import { useState } from 'react'
 import { toast } from 'sonner'
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { $deleteRecipe, type RecipeWorkspaceData } from '@/lib/recipe/functions'
@@ -19,10 +30,12 @@ import {
 type RecipeRecord = RecipeWorkspaceData['recipes'][number]
 
 export function RecipeNutritionPanel({ recipe }: { readonly recipe: RecipeRecord }) {
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const router = useRouter()
   const { mutate: deleteRecipe, isPending: isDeletePending } = useMutation({
     mutationFn: async () => await $deleteRecipe({ data: { recipeId: recipe.id } }),
     onSuccess: async () => {
+      setIsDeleteDialogOpen(false)
       await router.invalidate()
       toast.success('Recipe deleted.')
     },
@@ -46,14 +59,8 @@ export function RecipeNutritionPanel({ recipe }: { readonly recipe: RecipeRecord
     }
   }
 
-  const handleDelete = () => {
+  const handleDeleteConfirm = () => {
     if (isDeletePending) {
-      return
-    }
-
-    const isConfirmed = window.confirm(`Delete recipe "${recipe.name}"?`)
-
-    if (!isConfirmed) {
       return
     }
 
@@ -153,7 +160,7 @@ export function RecipeNutritionPanel({ recipe }: { readonly recipe: RecipeRecord
                 variant="outline"
                 size="sm"
                 className="rounded-full border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                onClick={handleDelete}
+                onClick={() => setIsDeleteDialogOpen(true)}
                 disabled={isDeletePending}
               >
                 <RiDeleteBin6Line className="size-4" />
@@ -212,6 +219,29 @@ export function RecipeNutritionPanel({ recipe }: { readonly recipe: RecipeRecord
           Sugars 90 g, Dietary fibre 30 g, Sodium 2.3 g.
         </div>
       </section>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete recipe?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove "{recipe.name}" and its ingredient composition from your
+              workspace.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeletePending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              type="button"
+              variant="destructive"
+              onClick={handleDeleteConfirm}
+              disabled={isDeletePending}
+            >
+              {isDeletePending ? 'Deleting...' : 'Delete recipe'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </article>
   )
 }
