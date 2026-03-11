@@ -1,0 +1,159 @@
+import type { IngredientTableRow } from '@/lib/ingredient/functions'
+
+const SEARCHABLE_FIELDS: Array<keyof IngredientTableRow> = [
+  'name',
+  'calories',
+  'energy',
+  'protein',
+  'fatTotal',
+  'fatSaturated',
+  'carbohydrate',
+  'sugar',
+  'dietaryFibre',
+  'sodium',
+]
+
+export function searchIngredientRows(rows: IngredientTableRow[], query: string) {
+  const normalizedQuery = normalizeText(query)
+
+  if (!normalizedQuery) {
+    return rows
+  }
+
+  const queryTokens = normalizedQuery.split(' ').filter(Boolean)
+
+  return rows
+    .map((row, index) => {
+      const searchableValues = SEARCHABLE_FIELDS.map((field) => normalizeText(row[field]))
+      const normalizedName = searchableValues[0]
+      const haystack = searchableValues.join(' ').trim()
+
+      if (!haystack) {
+        return null
+      }
+
+      const score = scoreIngredientRow({
+        haystack,
+        normalizedName,
+        normalizedQuery,
+        queryTokens,
+      })
+
+      if (score === Number.NEGATIVE_INFINITY) {
+        return null
+      }
+
+      return { row, index, score }
+    })
+    .filter((result) => result !== null)
+    .sort((left, right) => {
+      if (right.score !== left.score) {
+        return right.score - left.score
+      }
+
+      const leftName = left.row.name ?? ''
+      const rightName = right.row.name ?? ''
+      const alphabetical = leftName.localeCompare(rightName)
+
+      if (alphabetical !== 0) {
+        return alphabetical
+      }
+
+      return left.index - right.index
+    })
+    .map((result) => result.row)
+}
+
+function scoreIngredientRow({
+  haystack,
+  normalizedName,
+  normalizedQuery,
+  queryTokens,
+}: {
+  haystack: string
+  normalizedName: string
+  normalizedQuery: string
+  queryTokens: string[]
+}) {
+  let score = 0
+
+  if (normalizedName === normalizedQuery) {
+    score += 1_200
+  }
+
+  if (normalizedName.startsWith(normalizedQuery)) {
+    score += 900
+  }
+
+  const phraseIndex = normalizedName.indexOf(normalizedQuery)
+  if (phraseIndex >= 0) {
+    score += Math.max(0, 550 - phraseIndex * 4)
+  }
+
+  const nameWords = normalizedName.split(' ').filter(Boolean)
+  const allTokensResolvable = queryTokens.every((token) => {
+    if (nameWords.some((word) => word.startsWith(token))) {
+      score += 220
+      return true
+    }
+
+    const haystackIndex = haystack.indexOf(token)
+    if (haystackIndex >= 0) {
+      score += Math.max(40, 140 - haystackIndex)
+      return true
+    }
+
+    const fuzzyScore = scoreSubsequence(normalizedName, token)
+    if (fuzzyScore > 0) {
+      score += fuzzyScore
+      return true
+    }
+
+    return false
+  })
+
+  if (!allTokensResolvable) {
+    return Number.NEGATIVE_INFINITY
+  }
+
+  if (queryTokens.every((token) => normalizedName.includes(token))) {
+    score += 180
+  }
+
+  if (queryTokens.length > 1 && queryTokens.every((token) => haystack.includes(token))) {
+    score += 120
+  }
+
+  return score
+}
+
+function scoreSubsequence(text: string, query: string) {
+  if (!text || !query) {
+    return 0
+  }
+
+  let cursor = 0
+  let gaps = 0
+
+  for (const character of query) {
+    const matchIndex = text.indexOf(character, cursor)
+
+    if (matchIndex === -1) {
+      return 0
+    }
+
+    gaps += matchIndex - cursor
+    cursor = matchIndex + 1
+  }
+
+  return Math.max(24, 90 - gaps * 3)
+}
+
+function normalizeText(value: IngredientTableRow[keyof IngredientTableRow] | string) {
+  return String(value ?? '')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+}

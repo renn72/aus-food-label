@@ -1,3 +1,4 @@
+import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Table,
   TableBody,
@@ -28,8 +29,8 @@ const COLUMNS: Array<{
 export function IngredientTable({ rows }: { readonly rows: IngredientTableRow[] }) {
   return (
     <div className="overflow-hidden rounded-3xl border border-border/70 bg-card/70 shadow-xl shadow-black/10 backdrop-blur-sm">
-      <div className="max-h-[72svh] overflow-auto">
-        <Table>
+      <ScrollArea className="h-[72svh] w-full">
+        <Table className="w-full min-w-[78rem]">
           <TableHeader className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm">
             <TableRow className="hover:bg-transparent">
               {COLUMNS.map((column) => (
@@ -52,7 +53,7 @@ export function IngredientTable({ rows }: { readonly rows: IngredientTableRow[] 
             ))}
           </TableBody>
         </Table>
-      </div>
+      </ScrollArea>
     </div>
   )
 }
