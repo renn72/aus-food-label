@@ -43,4 +43,9 @@ export const createRecipeSchema = z
     }
   })
 
+export const deleteRecipeSchema = z.object({
+  recipeId: z.coerce.number().int().positive(),
+})
+
 export type CreateRecipeInput = z.infer<typeof createRecipeSchema>
+export type DeleteRecipeInput = z.infer<typeof deleteRecipeSchema>

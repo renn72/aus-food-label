@@ -1,11 +1,13 @@
 'use client'
 
-import { RiFileCopyLine, RiRestaurantLine } from '@remixicon/react'
+import { RiDeleteBin6Line, RiFileCopyLine, RiRestaurantLine } from '@remixicon/react'
+import { useMutation } from '@tanstack/react-query'
+import { useRouter } from '@tanstack/react-router'
 import { toast } from 'sonner'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import type { RecipeWorkspaceData } from '@/lib/recipe/functions'
+import { $deleteRecipe, type RecipeWorkspaceData } from '@/lib/recipe/functions'
 import {
   buildNutritionPanelCopyText,
   formatDailyIntakeValue,
@@ -17,6 +19,19 @@ import {
 type RecipeRecord = RecipeWorkspaceData['recipes'][number]
 
 export function RecipeNutritionPanel({ recipe }: { readonly recipe: RecipeRecord }) {
+  const router = useRouter()
+  const { mutate: deleteRecipe, isPending: isDeletePending } = useMutation({
+    mutationFn: async () => await $deleteRecipe({ data: { recipeId: recipe.id } }),
+    onSuccess: async () => {
+      await router.invalidate()
+      toast.success('Recipe deleted.')
+    },
+    onError: (error) => {
+      const message = error instanceof Error ? error.message : 'Unable to delete recipe.'
+      toast.error(message)
+    },
+  })
+
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(
@@ -31,8 +46,22 @@ export function RecipeNutritionPanel({ recipe }: { readonly recipe: RecipeRecord
     }
   }
 
+  const handleDelete = () => {
+    if (isDeletePending) {
+      return
+    }
+
+    const isConfirmed = window.confirm(`Delete recipe "${recipe.name}"?`)
+
+    if (!isConfirmed) {
+      return
+    }
+
+    deleteRecipe()
+  }
+
   return (
-    <article className="grid gap-6 rounded-[2rem] border border-border/70 bg-card/80 p-6 shadow-xl shadow-black/10 lg:grid-cols-[minmax(0,1fr)_24rem]">
+    <article className="grid gap-6 overflow-hidden rounded-[2rem] border border-border/70 bg-card/80 p-6 shadow-xl shadow-black/10 xl:grid-cols-[minmax(0,1fr)_minmax(0,28rem)]">
       <div className="space-y-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -97,7 +126,7 @@ export function RecipeNutritionPanel({ recipe }: { readonly recipe: RecipeRecord
         </section>
       </div>
 
-      <section className="rounded-[1.75rem] border-2 border-foreground bg-background text-foreground">
+      <section className="min-w-0 rounded-[1.75rem] border-2 border-foreground bg-background text-foreground">
         <div className="border-b-2 border-foreground px-4 py-4">
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -107,16 +136,30 @@ export function RecipeNutritionPanel({ recipe }: { readonly recipe: RecipeRecord
               <h3 className="mt-2 text-2xl font-semibold tracking-tight">Nutrition Information</h3>
             </div>
 
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="rounded-full"
-              onClick={handleCopy}
-            >
-              <RiFileCopyLine className="size-4" />
-              Copy text
-            </Button>
+            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="rounded-full"
+                onClick={handleCopy}
+                disabled={isDeletePending}
+              >
+                <RiFileCopyLine className="size-4" />
+                Copy text
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="rounded-full border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                onClick={handleDelete}
+                disabled={isDeletePending}
+              >
+                <RiDeleteBin6Line className="size-4" />
+                {isDeletePending ? 'Deleting...' : 'Delete'}
+              </Button>
+            </div>
           </div>
 
           <div className="mt-4 grid gap-1 text-sm">
@@ -132,29 +175,32 @@ export function RecipeNutritionPanel({ recipe }: { readonly recipe: RecipeRecord
           </div>
         </div>
 
-        <div className="grid grid-cols-[minmax(0,1fr)_7.25rem_8rem_7.25rem] border-b border-foreground px-4 py-2 text-[0.68rem] font-semibold tracking-[0.2em] uppercase">
-          <span>Average quantity</span>
-          <span className="text-right">Per serve</span>
-          <span className="text-right">% Daily intake</span>
-          <span className="text-right">Per 100 g</span>
+        <div className="grid grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)_minmax(0,0.95fr)_minmax(0,0.8fr)] gap-2 border-b border-foreground px-4 py-2 text-[0.62rem] font-semibold tracking-[0.16em] uppercase sm:text-[0.68rem]">
+          <span className="min-w-0">Average quantity</span>
+          <span className="min-w-0 text-right">Per serve</span>
+          <span className="min-w-0 text-right">
+            % Daily intake
+            <span className="block tracking-normal normal-case">(per serve)</span>
+          </span>
+          <span className="min-w-0 text-right">Per 100 g</span>
         </div>
 
         <div className="divide-y divide-foreground/70 px-4">
           {nutritionPanelFields.map((field) => (
             <div
               key={field.key}
-              className="grid grid-cols-[minmax(0,1fr)_7.25rem_8rem_7.25rem] items-center gap-3 py-2.5 text-sm"
+              className="grid grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)_minmax(0,0.95fr)_minmax(0,0.8fr)] items-center gap-2 py-2.5 text-xs sm:text-sm"
             >
               <div className="min-w-0">
                 <p className="font-medium">{field.label}</p>
               </div>
-              <p className="text-right font-medium tabular-nums">
+              <p className="min-w-0 text-right font-medium tabular-nums">
                 {formatPanelValue(field.key, recipe.panel.perServe[field.key])} {field.unit}
               </p>
-              <p className="text-right font-medium tabular-nums">
+              <p className="min-w-0 text-right font-medium tabular-nums">
                 {formatDailyIntakeValue(recipe.panel.dailyIntakePerServe[field.key])}
               </p>
-              <p className="text-right font-medium tabular-nums">
+              <p className="min-w-0 text-right font-medium tabular-nums">
                 {formatPanelValue(field.key, recipe.panel.per100g[field.key])} {field.unit}
               </p>
             </div>

@@ -16,7 +16,7 @@ import {
   extractNutritionMetrics,
   type RecipeNutritionIngredient,
 } from '@/lib/recipe/nutrition'
-import { createRecipeSchema } from '@/lib/recipe/validation'
+import { createRecipeSchema, deleteRecipeSchema } from '@/lib/recipe/validation'
 
 const ingredientName = sql<string>`coalesce(${ingredient.foodName}, ${ingredient.name})`
 
@@ -161,6 +161,29 @@ export const $createRecipe = createServerFn({ method: 'POST' })
 
       return createdRecipe
     })
+  })
+
+export const $deleteRecipe = createServerFn({ method: 'POST' })
+  .inputValidator(deleteRecipeSchema)
+  .handler(async ({ data }) => {
+    const user = await _getUser()
+
+    if (!user) {
+      throw new Error('Unauthorized')
+    }
+
+    const [deletedRecipe] = await db
+      .delete(recipe)
+      .where(and(eq(recipe.id, data.recipeId), eq(recipe.userId, user.id)))
+      .returning({
+        id: recipe.id,
+      })
+
+    if (!deletedRecipe) {
+      throw new Error('Recipe not found.')
+    }
+
+    return deletedRecipe
   })
 
 function groupRecipeRows(rows: RecipeRow[]) {
