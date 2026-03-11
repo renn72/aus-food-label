@@ -1,5 +1,6 @@
-import { useLocation, useRouter } from '@tanstack/react-router'
+import { useLocation, useRouter, useSearch } from '@tanstack/react-router'
 import {
+  type ColumnDef,
   type ColumnFiltersState,
   getCoreRowModel,
   getFacetedMinMaxValues,
@@ -168,8 +169,9 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
   } = props
   const router = useRouter()
   const location = useLocation({
-    select: ({ hash, pathname, searchStr }) => ({ hash, pathname, searchStr }),
+    select: ({ hash, pathname }) => ({ hash, pathname }),
   })
+  const search = useSearch({ strict: false, structuralSharing: false }) as SearchRecord
   const pageKey = queryKeys?.page ?? PAGE_KEY
   const perPageKey = queryKeys?.perPage ?? PER_PAGE_KEY
   const sortKey = queryKeys?.sort ?? SORT_KEY
@@ -178,26 +180,17 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
   const pageDefault = 1
   const perPageDefault = initialState?.pagination?.pageSize ?? 10
   const sortingDefault = React.useMemo(() => initialState?.sorting ?? [], [initialState?.sorting])
-  const search = React.useMemo(
-    () => router.options.parseSearch(location.searchStr) as SearchRecord,
-    [location.searchStr, router],
-  )
-
   const commitSearch = React.useCallback(
     (updater: (previous: SearchRecord) => SearchRecord) => {
-      const nextSearch = updater({
-        ...(router.options.parseSearch(location.searchStr) as SearchRecord),
-      })
-
       return router.navigate({
-        href: `${location.pathname}${router.options.stringifySearch(nextSearch)}${
-          location.hash ? `#${location.hash}` : ''
-        }`,
+        to: location.pathname,
+        search: (previous) => updater((previous ?? {}) as SearchRecord),
+        hash: location.hash || undefined,
         replace: history === 'replace',
         resetScroll: scroll,
       })
     },
-    [history, location.hash, location.pathname, location.searchStr, router, scroll],
+    [history, location.hash, location.pathname, router, scroll],
   )
 
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>(
@@ -247,7 +240,7 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
   )
 
   const columnIds = React.useMemo(() => {
-    return new Set(columns.map((column) => column.id).filter(Boolean) as string[])
+    return new Set(columns.map((column) => getColumnKey(column)).filter(Boolean) as string[])
   }, [columns])
 
   const sortingParser = React.useMemo(() => getSortingStateParser<TData>(columnIds), [columnIds])
@@ -278,7 +271,7 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
   const filterableColumns = React.useMemo(() => {
     if (enableAdvancedFilter) return []
 
-    return columns.filter((column) => column.enableColumnFilter)
+    return columns.filter((column) => column.enableColumnFilter && getColumnKey(column))
   }, [columns, enableAdvancedFilter])
 
   const filterValues = React.useMemo(() => {
@@ -287,11 +280,13 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
     }
 
     return filterableColumns.reduce<Record<string, SearchFilterValue>>((filters, column) => {
-      if (!column.id) {
+      const columnKey = getColumnKey(column)
+
+      if (!columnKey) {
         return filters
       }
 
-      filters[column.id] = normalizeSearchFilterValue(search[column.id])
+      filters[columnKey] = normalizeSearchFilterValue(search[columnKey])
       return filters
     }, {})
   }, [enableAdvancedFilter, filterableColumns, search])
@@ -353,7 +348,7 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
           typeof updaterOrValue === 'function' ? updaterOrValue(previous) : updaterOrValue
 
         const filterUpdates = next.reduce<Record<string, SearchFilterValue>>((filters, filter) => {
-          if (filterableColumns.find((column) => column.id === filter.id)) {
+          if (filterableColumns.find((column) => getColumnKey(column) === filter.id)) {
             filters[filter.id] = normalizeSearchFilterValue(filter.value)
           }
 
@@ -422,4 +417,15 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
     () => ({ table, shallow, debounceMs, throttleMs }),
     [table, shallow, debounceMs, throttleMs],
   )
+}
+
+function getColumnKey<TData>(column: ColumnDef<TData>) {
+  if (typeof column.id === 'string' && column.id.length > 0) {
+    return column.id
+  }
+
+  const accessorKey =
+    'accessorKey' in column && typeof column.accessorKey === 'string' ? column.accessorKey : null
+
+  return accessorKey && accessorKey.length > 0 ? accessorKey : null
 }
