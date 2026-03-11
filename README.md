@@ -53,6 +53,36 @@ While Nitro provides a great multi-provider default, the official [@netlify/vite
 
 Refer to the [TanStack Start hosting docs](https://tanstack.com/start/latest/docs/framework/react/guide/hosting) for deploying to other platforms.
 
+### Docker / Coolify
+
+A production `Dockerfile` is included for Node-based deployments such as Coolify.
+
+Builds:
+
+```bash
+docker build -t aus-food-label .
+```
+
+Runs:
+
+```bash
+docker run -p 3000:3000 \
+  -e BETTER_AUTH_SECRET=replace-me \
+  -e VITE_BASE_URL=https://your-app.example.com \
+  -v $(pwd)/db:/app/db \
+  aus-food-label
+```
+
+Coolify notes:
+
+- Container port: `3000`
+- Persistent volume: mount a volume to `/app/db`
+- Required env vars: `BETTER_AUTH_SECRET`, `VITE_BASE_URL`
+- Optional env var: `DATABASE_URL`
+  Default is `file:/app/db/local.db`, which is suitable for the Coolify volume mount above.
+
+The container does not auto-run Drizzle migrations. If you want startup migrations baked into the image too, add that as a separate change.
+
 ## Issue watchlist
 
 - [Router/Start issues](https://github.com/TanStack/router/issues) - TanStack Start is in RC.

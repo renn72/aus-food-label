@@ -1,0 +1,12 @@
+.git
+.github
+.tanstack
+.cache
+.DS_Store
+.env
+node_modules
+.output
+dist
+db/*.db
+db/*.db-*
+pnpm-debug.log*
