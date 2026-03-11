@@ -1,4 +1,4 @@
-import { useLocation, useRouter, useSearch } from '@tanstack/react-router'
+import { useLocation, useRouter } from '@tanstack/react-router'
 import {
   type ColumnDef,
   type ColumnFiltersState,
@@ -169,9 +169,12 @@ export function useDataTable<TData>(props: UseDataTableProps<TData>) {
   } = props
   const router = useRouter()
   const location = useLocation({
-    select: ({ hash, pathname }) => ({ hash, pathname }),
+    select: ({ hash, pathname, searchStr }) => ({ hash, pathname, searchStr }),
   })
-  const search = useSearch({ strict: false, structuralSharing: false }) as SearchRecord
+  const search = React.useMemo(
+    () => (router.options.parseSearch?.(location.searchStr) ?? {}) as SearchRecord,
+    [location.searchStr, router],
+  )
   const pageKey = queryKeys?.page ?? PAGE_KEY
   const perPageKey = queryKeys?.perPage ?? PER_PAGE_KEY
   const sortKey = queryKeys?.sort ?? SORT_KEY
