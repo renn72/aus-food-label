@@ -8,6 +8,13 @@
       "when": 1773191306207,
       "tag": "0000_daffy_gorilla_man",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1773193656198,
+      "tag": "0001_tricky_psylocke",
+      "breakpoints": true
     }
   ]
 }
