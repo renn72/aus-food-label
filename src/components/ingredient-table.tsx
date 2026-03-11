@@ -1,11 +1,22 @@
-import { type ColumnDef, type FilterFn, type SortingFn } from '@tanstack/react-table'
+import {
+  type ColumnDef,
+  type ColumnFiltersState,
+  type FilterFn,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  type SortingFn,
+  type SortingState,
+  useReactTable,
+} from '@tanstack/react-table'
+import * as React from 'react'
 
+import { CreateIngredientSheet } from '@/components/create-ingredient-sheet'
 import { DataTable } from '@/components/data-table/data-table'
 import { DataTableColumnHeader } from '@/components/data-table/data-table-column-header'
 import { DataTableToolbar } from '@/components/data-table/data-table-toolbar'
-import { CreateIngredientSheet } from '@/components/create-ingredient-sheet'
 import { Badge } from '@/components/ui/badge'
-import { useDataTable } from '@/hooks/use-data-table'
 import type { IngredientTableRow } from '@/lib/ingredient/functions'
 import { matchesIngredientRow } from '@/lib/ingredient/search'
 
@@ -90,9 +101,7 @@ const columns: ColumnDef<IngredientTableRow>[] = [
 
       return (
         <div className="flex justify-center">
-          <Badge variant={isAusFood ? 'default' : 'secondary'}>
-            {isAusFood ? 'Yes' : 'No'}
-          </Badge>
+          <Badge variant={isAusFood ? 'default' : 'secondary'}>{isAusFood ? 'Yes' : 'No'}</Badge>
         </div>
       )
     },
@@ -190,28 +199,29 @@ const columns: ColumnDef<IngredientTableRow>[] = [
 ]
 
 export function IngredientTable({ rows }: { readonly rows: IngredientTableRow[] }) {
-  const { table } = useDataTable({
+  const [sorting, setSorting] = React.useState<SortingState>([])
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
+
+  // oxlint-disable-next-line react-hooks-js/incompatible-library
+  const table = useReactTable({
     data: rows,
     columns,
     getRowId: (row) => String(row.id),
     initialState: {
       pagination: {
-        pageIndex: 0,
         pageSize: 50,
       },
     },
-    manualFiltering: false,
-    manualPagination: false,
-    manualSorting: false,
-    enableRowSelection: false,
-    clearOnDefault: true,
-    queryKeys: {
-      page: 'ingredientPage',
-      perPage: 'ingredientPerPage',
-      sort: 'ingredientSort',
-      filters: 'ingredientFilters',
-      joinOperator: 'ingredientJoinOperator',
+    state: {
+      sorting,
+      columnFilters,
     },
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
   })
   const filteredRowCount = table.getFilteredRowModel().rows.length
 
@@ -228,7 +238,22 @@ export function IngredientTable({ rows }: { readonly rows: IngredientTableRow[] 
         stickyHeader
         stickyHeaderBackground="var(--card)"
       >
-        <DataTableToolbar table={table}>
+        <DataTableToolbar
+          table={table}
+          searchColumnId="name"
+          searchPlaceholder="Search ingredients or nutrients"
+          selectFilters={[
+            {
+              columnId: 'isAusFood',
+              title: 'Aus food',
+              allLabel: 'All sources',
+              options: [
+                { label: 'Aus food', value: 'yes' },
+                { label: 'Custom', value: 'no' },
+              ],
+            },
+          ]}
+        >
           <div className="flex items-center gap-2">
             <div className="rounded-full border border-border/70 bg-background/70 px-3 py-1.5 text-sm font-medium">
               {filteredRowCount} / {rows.length}
