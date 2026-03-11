@@ -15,6 +15,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { WsysBrand } from '@/components/wsys-brand'
 import authClient from '@/lib/auth/auth-client'
 import { authQueryOptions } from '@/lib/auth/queries'
 
@@ -112,15 +113,17 @@ export function AuthScreen({ defaultMode = 'login', redirectUrl }: AuthScreenPro
         <div className="grid flex-1 items-center gap-10 py-10 lg:grid-cols-[minmax(0,1fr)_30rem] lg:items-center">
           <section className="space-y-8">
             <div className="space-y-4">
-              <p className="text-xs font-medium tracking-[0.35em] text-primary/80 uppercase">
-                Aus Food Label
-              </p>
+              <WsysBrand
+                product="Aus Food Label"
+                caption="WSYS nutrition workspace"
+                className="max-w-md"
+              />
               <h1 className="max-w-xl text-4xl font-semibold tracking-tight sm:text-5xl">
-                Sign in to manage ingredients and build from a clean starting point.
+                WSYS keeps your ingredient data, auth flow, and label workspace in one place.
               </h1>
               <p className="max-w-xl text-base leading-7 text-muted-foreground">
-                Dark by default, no template splash screen, and a focused auth entry for the
-                SQLite-backed app.
+                Aus Food Label runs inside the WSYS shell with a dark-first auth flow and a
+                SQLite-backed ingredient stack.
               </p>
             </div>
 
@@ -153,7 +156,7 @@ export function AuthScreen({ defaultMode = 'login', redirectUrl }: AuthScreenPro
             <CardHeader className="border-b border-border/70 pb-5">
               <CardTitle className="text-2xl">Access the app</CardTitle>
               <CardDescription>
-                Use one screen for returning users and new accounts.
+                Sign in to the WSYS workspace or create a new Aus Food Label account.
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-6">

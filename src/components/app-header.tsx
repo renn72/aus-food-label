@@ -13,6 +13,7 @@ import { toast } from 'sonner'
 import { useTheme } from '@/components/theme-provider'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button, buttonVariants } from '@/components/ui/button'
+import { WsysBrand } from '@/components/wsys-brand'
 import authClient from '@/lib/auth/auth-client'
 import { authQueryOptions } from '@/lib/auth/queries'
 import { cn } from '@/lib/utils'
@@ -59,12 +60,11 @@ export function AppHeader({ className }: { readonly className?: string }) {
       )}
     >
       <Link to={user ? '/app' : '/'} className="min-w-0">
-        <p className="text-xs font-medium tracking-[0.35em] text-primary/80 uppercase">
-          Aus Food Label
-        </p>
-        <p className="truncate text-sm text-muted-foreground">
-          Ingredients, labels, and nutrition data.
-        </p>
+        <WsysBrand
+          compact
+          product="Aus Food Label"
+          caption="Ingredients, labels, and nutrition data."
+        />
       </Link>
 
       <div className="flex flex-wrap items-center justify-end gap-2">

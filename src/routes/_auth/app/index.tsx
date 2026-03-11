@@ -1,5 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 
+import { WsysBrand } from '@/components/wsys-brand'
+
 export const Route = createFileRoute('/_auth/app/')({
   component: AppIndex,
 })
@@ -10,13 +12,13 @@ function AppIndex() {
   return (
     <section className="grid gap-6">
       <div className="space-y-3">
-        <p className="text-xs font-medium tracking-[0.3em] text-primary/80 uppercase">Signed in</p>
+        <WsysBrand compact product="Workspace" caption="WSYS authenticated shell" />
         <h2 className="text-3xl font-semibold tracking-tight">
           Welcome back{user.name ? `, ${user.name}` : ''}.
         </h2>
         <p className="max-w-2xl text-muted-foreground">
-          The boilerplate placeholder has been removed. This is now a clean protected shell you can
-          build on for ingredients, labels, and application workflows.
+          The WSYS shell is now the base for ingredients, labels, and the rest of your application
+          workflows.
         </p>
       </div>
 

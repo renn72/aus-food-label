@@ -30,11 +30,11 @@ export const Route = createRootRouteWithContext<{
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'aus-food-label',
+        title: 'WSYS | Aus Food Label',
       },
       {
         name: 'description',
-        content: 'Dark-first auth and ingredient management for aus-food-label.',
+        content: 'WSYS branding, dark-first auth, and ingredient management for Aus Food Label.',
       },
     ],
     links: [

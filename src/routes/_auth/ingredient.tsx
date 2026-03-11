@@ -5,6 +5,7 @@ import { startTransition, useDeferredValue, useState } from 'react'
 import { AppShell } from '@/components/app-shell'
 import { IngredientTable } from '@/components/ingredient-table'
 import { Input } from '@/components/ui/input'
+import { WsysBrand } from '@/components/wsys-brand'
 import { $getIngredientTableRows } from '@/lib/ingredient/functions'
 import { searchIngredientRows } from '@/lib/ingredient/search'
 
@@ -24,10 +25,8 @@ function IngredientPage() {
       <section className="grid min-h-0 flex-1 grid-rows-[auto_auto_minmax(0,1fr)] gap-6 overflow-hidden">
         <div className="flex flex-col gap-4 rounded-3xl border border-border/70 bg-card/70 px-6 py-5 shadow-lg shadow-black/10 backdrop-blur-sm sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs font-medium tracking-[0.35em] text-primary/80 uppercase">
-              Ingredient Directory
-            </p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight">All imported ingredients</h1>
+            <WsysBrand compact product="Ingredient Directory" caption="WSYS nutrient catalogue" />
+            <h1 className="mt-3 text-3xl font-semibold tracking-tight">All imported ingredients</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
               Nutrient values are shown per imported serving basis from the Aus Food data files.
             </p>
