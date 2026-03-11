@@ -1,25 +1,16 @@
-import { RiAddLine, RiCheckLine, RiDeleteBin6Line, RiLoader4Line, RiSearch2Line } from '@remixicon/react'
+import { RiAddLine, RiDeleteBin6Line, RiLoader4Line } from '@remixicon/react'
 import { useMutation } from '@tanstack/react-query'
 import { useRouter } from '@tanstack/react-router'
-import { type ComponentProps, type Dispatch, type SetStateAction, useState } from 'react'
+import { type ComponentProps, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
+import { VirtualizedCombobox } from '@/components/ui-extended/vitrualilzed-combobox'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { $createRecipe, type RecipeWorkspaceData } from '@/lib/recipe/functions'
 import { formatWeightValue } from '@/lib/recipe/nutrition'
-import { cn } from '@/lib/utils'
 
 type RecipeIngredientDraft = {
   rowId: string
@@ -46,24 +37,35 @@ export function CreateRecipeForm({
   readonly ingredients: RecipeWorkspaceData['availableIngredients']
 }) {
   const router = useRouter()
+  const nextIngredientRowIdRef = useRef(1)
   const [name, setName] = useState('')
   const [outputNetWeight, setOutputNetWeight] = useState('')
   const [serveSize, setServeSize] = useState('100')
   const [servingsPerPack, setServingsPerPack] = useState('1')
   const [ingredientRows, setIngredientRows] = useState<RecipeIngredientDraft[]>(() => [
-    createIngredientRow(),
+    createInitialIngredientRow(),
   ])
+
+  const createIngredientRow = () => {
+    const rowId = `ingredient-row-${nextIngredientRowIdRef.current}`
+    nextIngredientRowIdRef.current += 1
+
+    return {
+      rowId,
+      ingredientId: null,
+      quantity: '100',
+    } satisfies RecipeIngredientDraft
+  }
 
   const { mutate, isPending } = useMutation({
     mutationFn: async (payload: CreateRecipePayload) => await $createRecipe({ data: payload }),
     onSuccess: async () => {
-      resetForm({
-        setName,
-        setOutputNetWeight,
-        setServeSize,
-        setServingsPerPack,
-        setIngredientRows,
-      })
+      setName('')
+      setOutputNetWeight('')
+      setServeSize('100')
+      setServingsPerPack('1')
+      nextIngredientRowIdRef.current = 1
+      setIngredientRows([createInitialIngredientRow()])
       await router.invalidate()
       toast.success('Recipe created.')
     },
@@ -73,8 +75,13 @@ export function CreateRecipeForm({
     },
   })
 
-  const rawNetWeight = ingredientRows.reduce((total, row) => total + parseMetricInput(row.quantity), 0)
-  const effectiveNetWeight = outputNetWeight.trim() ? parseMetricInput(outputNetWeight) : rawNetWeight
+  const rawNetWeight = ingredientRows.reduce(
+    (total, row) => total + parseMetricInput(row.quantity),
+    0,
+  )
+  const effectiveNetWeight = outputNetWeight.trim()
+    ? parseMetricInput(outputNetWeight)
+    : rawNetWeight
 
   const handleSubmit = (event: RecipeFormSubmitEvent) => {
     event.preventDefault()
@@ -239,7 +246,9 @@ export function CreateRecipeForm({
                     </div>
 
                     <div className="grid gap-2">
-                      <Label htmlFor={`recipe-ingredient-quantity-${row.rowId}`}>Quantity (g)</Label>
+                      <Label htmlFor={`recipe-ingredient-quantity-${row.rowId}`}>
+                        Quantity (g)
+                      </Label>
                       <Input
                         id={`recipe-ingredient-quantity-${row.rowId}`}
                         value={row.quantity}
@@ -302,72 +311,30 @@ function IngredientPicker({
 }: {
   readonly ingredients: RecipeWorkspaceData['availableIngredients']
   readonly value: number | null
-  readonly onChange: (ingredientId: number) => void
+  readonly onChange: (ingredientId: number | null) => void
   readonly disabled: boolean
 }) {
-  const [open, setOpen] = useState(false)
   const selectedIngredient = ingredients.find((ingredient) => ingredient.id === value) ?? null
+  const options = ingredients.map((ingredient) => ({
+    value: String(ingredient.id),
+    label: `${ingredient.name} ${ingredient.isAusFood ? '· AUS' : '· Custom'}`,
+  }))
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger
-        render={
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full justify-between rounded-2xl px-3 font-normal"
-            disabled={disabled}
-          />
-        }
-      >
-        <div className="flex min-w-0 items-center gap-2">
-          <RiSearch2Line className="size-4 text-muted-foreground" />
-          <span className={cn('truncate', !selectedIngredient && 'text-muted-foreground')}>
-            {selectedIngredient?.name ?? 'Select ingredient'}
-          </span>
-        </div>
-      </PopoverTrigger>
-
-      <PopoverContent className="w-[min(34rem,calc(100vw-2rem))] p-0" align="start">
-        <Command>
-          <CommandInput placeholder="Search ingredients..." />
-          <CommandList className="max-h-[22rem]">
-            <CommandEmpty>No ingredients found.</CommandEmpty>
-            <CommandGroup className="max-h-[22rem] overflow-y-auto">
-              {ingredients.map((ingredient) => {
-                const isSelected = ingredient.id === value
-
-                return (
-                  <CommandItem
-                    key={ingredient.id}
-                    value={`${ingredient.name} ${ingredient.isAusFood ? 'aus' : 'custom'}`}
-                    onSelect={() => {
-                      onChange(ingredient.id)
-                      setOpen(false)
-                    }}
-                  >
-                    <div
-                      className={cn(
-                        'flex size-4 items-center justify-center rounded-sm border border-primary',
-                        isSelected
-                          ? 'bg-primary text-primary-foreground'
-                          : 'opacity-50 [&_svg]:invisible',
-                      )}
-                    >
-                      <RiCheckLine className="size-3" />
-                    </div>
-                    <span className="truncate">{ingredient.name}</span>
-                    <span className="ml-auto text-xs text-muted-foreground">
-                      {ingredient.isAusFood ? 'AUS' : 'Custom'}
-                    </span>
-                  </CommandItem>
-                )
-              })}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+    <VirtualizedCombobox
+      options={options}
+      selectedOption={selectedIngredient ? String(selectedIngredient.id) : ''}
+      onSelectOption={(ingredientId) => {
+        onChange(ingredientId ? Number(ingredientId) : null)
+      }}
+      searchPlaceholder="Search ingredients..."
+      emptyMessage="No ingredients found."
+      width="100%"
+      contentWidth="min(34rem, calc(100vw - 2rem))"
+      height="22rem"
+      disabled={disabled}
+      triggerClassName="w-full justify-between rounded-2xl px-3 font-normal"
+    />
   )
 }
 
@@ -406,7 +373,9 @@ function buildPayload({
     return null
   }
 
-  const uniqueIngredientIds = new Set(recipeIngredients.map((ingredient) => ingredient.ingredientId))
+  const uniqueIngredientIds = new Set(
+    recipeIngredients.map((ingredient) => ingredient.ingredientId),
+  )
 
   if (uniqueIngredientIds.size !== recipeIngredients.length) {
     toast.error('Each ingredient can only appear once per recipe.')
@@ -440,39 +409,15 @@ function buildPayload({
   }
 }
 
-function createIngredientRow(): RecipeIngredientDraft {
+function createInitialIngredientRow(): RecipeIngredientDraft {
   return {
-    rowId: createRowId(),
+    rowId: 'ingredient-row-0',
     ingredientId: null,
     quantity: '100',
   }
 }
 
-function createRowId() {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
-}
-
 function parseMetricInput(value: string) {
   const parsedValue = Number(value)
   return Number.isFinite(parsedValue) ? parsedValue : 0
-}
-
-function resetForm({
-  setName,
-  setOutputNetWeight,
-  setServeSize,
-  setServingsPerPack,
-  setIngredientRows,
-}: {
-  setName: Dispatch<SetStateAction<string>>
-  setOutputNetWeight: Dispatch<SetStateAction<string>>
-  setServeSize: Dispatch<SetStateAction<string>>
-  setServingsPerPack: Dispatch<SetStateAction<string>>
-  setIngredientRows: Dispatch<SetStateAction<RecipeIngredientDraft[]>>
-}) {
-  setName('')
-  setOutputNetWeight('')
-  setServeSize('100')
-  setServingsPerPack('1')
-  setIngredientRows([createIngredientRow()])
 }
