@@ -7,18 +7,23 @@ Rebuild `/home/renn/projects/aus-food-label/aus-food-label` from a TanStack Star
 ## Progress
 
 - [x] (2026-03-20 10:06Z) Create and commit the migration plan on a dedicated branch.
-- [ ] Replace the TanStack Start entry, route generation, and SSR shell with a plain Vite SPA entry and a single TanStack Router route.
-- [ ] Implement client-side ingredient seed loading from the two CSV files and add validated local storage persistence for custom ingredients and recipes.
-- [ ] Rebuild the UI into a one-page workflow that supports ingredient management, recipe creation, and nutrition label output with a disclaimer.
+- [x] (2026-03-20 10:29Z) Replace the TanStack Start entry, route generation, and SSR shell with a plain Vite SPA entry and a single TanStack Router route.
+- [x] (2026-03-20 10:29Z) Implement client-side ingredient seed loading from the two CSV files and add validated local storage persistence for custom ingredients and recipes.
+- [x] (2026-03-20 10:29Z) Rebuild the UI into a one-page workflow that supports ingredient management, recipe creation, and nutrition label output with a disclaimer.
 - [ ] Remove obsolete server/auth/database dependencies and files, validate with lint/type checks, and complete the plan.
 
 ## Surprises & Discoveries
 
 - The repository does not contain `/home/renn/projects/aus-food-label/aus-food-label/docs/PLANS.md`, so the ExecPlan had to be authored without a local template.
+- The bundled ingredient CSVs are only about 1.07 MB combined and roughly 2,083 rows, which made direct in-browser parsing practical without introducing an extra CSV dependency.
+- Moving the app away from server functions was simpler than expected because `/home/renn/projects/aus-food-label/aus-food-label/src/lib/recipe/nutrition.ts` already performed the core label calculations on plain objects.
 
 ## Decision Log
 
 - 2026-03-20: Created the migration record on branch `client-only-vite-router` before implementation so the runtime rewrite can proceed in staged commits.
+- 2026-03-20: Used a code-based TanStack Router setup with a single `/` route instead of file-based routing, because the app is now intentionally a one-page SPA and no generated route tree is needed.
+- 2026-03-20: Implemented Jotai-managed client state with versioned local storage recovery rather than `atomWithStorage`, so malformed JSON and partially invalid arrays can be sanitized explicitly.
+- 2026-03-20: Loaded the base ingredient catalogue directly from the two shipped CSV files in the browser using a small parser adapted from the old import script, which kept the CSVs as the source of truth.
 
 ## Outcomes & Retrospective
 

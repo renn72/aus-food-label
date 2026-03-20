@@ -1,41 +1,37 @@
-import { QueryClient } from "@tanstack/react-query";
-import { createRouter } from "@tanstack/react-router";
-import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
+import {
+  Outlet,
+  createRootRoute,
+  createRoute,
+  createRouter,
+} from '@tanstack/react-router'
 
-import { DefaultCatchBoundary } from "@/components/default-catch-boundary";
-import { DefaultNotFound } from "@/components/default-not-found";
+import { App } from '@/app'
 
-import { routeTree } from "./routeTree.gen";
+const rootRoute = createRootRoute({
+  component: RootLayout,
+})
 
-export function getRouter() {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        refetchOnWindowFocus: false,
-        staleTime: 1000 * 60 * 2, // 2 minutes
-      },
-    },
-  });
+const indexRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/',
+  component: App,
+})
 
-  const router = createRouter({
-    routeTree,
-    context: { queryClient, user: null },
-    defaultPreload: "intent",
-    // react-query will handle data fetching & caching
-    // https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#passing-all-loader-events-to-an-external-cache
-    defaultPreloadStaleTime: 0,
-    defaultErrorComponent: DefaultCatchBoundary,
-    defaultNotFoundComponent: DefaultNotFound,
-    scrollRestoration: true,
-    defaultStructuralSharing: true,
-  });
+const routeTree = rootRoute.addChildren([indexRoute])
 
-  setupRouterSsrQueryIntegration({
-    router,
-    queryClient,
-    handleRedirects: true,
-    wrapQueryClient: true,
-  });
+export const router = createRouter({
+  routeTree,
+  defaultPreload: 'intent',
+  scrollRestoration: true,
+  defaultStructuralSharing: true,
+})
 
-  return router;
+declare module '@tanstack/react-router' {
+  interface Register {
+    router: typeof router
+  }
+}
+
+function RootLayout() {
+  return <Outlet />
 }

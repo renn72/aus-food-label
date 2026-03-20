@@ -1,1 +1,0 @@
-ALTER TABLE `recipe` ADD `product_weight` real;

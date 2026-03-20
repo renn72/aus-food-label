@@ -1,34 +1,9 @@
 import type { ReactNode } from 'react'
 
-import { AppHeader } from '@/components/app-header'
-import { cn } from '@/lib/utils'
-
-export function AppShell({
-  children,
-  maxWidthClassName = 'max-w-6xl',
-  fitViewport = false,
-}: {
-  readonly children: ReactNode
-  readonly maxWidthClassName?: string
-  readonly fitViewport?: boolean
-}) {
+export function AppShell({ children }: { readonly children: ReactNode }) {
   return (
-    <div
-      className={cn(
-        'bg-background px-6 text-foreground sm:px-8',
-        fitViewport ? 'h-svh overflow-hidden pt-0 pb-6' : 'min-h-svh py-6',
-      )}
-    >
-      <div
-        className={cn(
-          'mx-auto flex w-full flex-col gap-6',
-          maxWidthClassName,
-          fitViewport && 'h-full min-h-0 gap-4',
-        )}
-      >
-        <AppHeader className={cn(fitViewport && 'sticky top-0 z-30')} />
-        {children}
-      </div>
+    <div className="min-h-svh bg-[radial-gradient(circle_at_top_left,rgba(249,115,22,0.18),transparent_28%),radial-gradient(circle_at_top_right,rgba(245,158,11,0.14),transparent_30%),linear-gradient(180deg,var(--background),color-mix(in_oklch,var(--background),black_5%))] px-4 py-4 text-foreground sm:px-6 sm:py-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">{children}</div>
     </div>
   )
 }

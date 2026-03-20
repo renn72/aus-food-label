@@ -64,7 +64,7 @@ export const nutritionDailyIntakeTargets: Partial<Record<NutritionPanelFieldKey,
 }
 
 export type RecipeNutritionIngredient = {
-  ingredientId: number
+  ingredientId: number | string
   name: string
   quantity: number
   metrics: NutritionMetrics

@@ -1,5 +1,11 @@
-import { ScriptOnce } from '@tanstack/react-router'
-import { createContext, use, useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
 
 type Theme = 'dark' | 'light' | 'system'
 const MEDIA = '(prefers-color-scheme: dark)'
@@ -29,29 +35,25 @@ export function ThemeProvider({
   children,
   defaultTheme = 'dark',
   storageKey = 'theme',
-  ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(
-    () =>
-      (typeof window !== 'undefined' ? (localStorage.getItem(storageKey) as Theme) : null) ||
-      defaultTheme,
-  )
+  const [theme, setTheme] = useState<Theme>(() => getStoredTheme(storageKey, defaultTheme))
 
   const handleMediaQuery = useCallback(
     (e: MediaQueryListEvent | MediaQueryList) => {
-      if (theme !== 'system') return
-      const root = window.document.documentElement
-      const targetTheme = e.matches ? 'dark' : 'light'
-      if (!root.classList.contains(targetTheme)) {
-        root.classList.remove('light', 'dark')
-        root.classList.add(targetTheme)
+      if (theme !== 'system') {
+        return
       }
+
+      applyThemeClass(e.matches ? 'dark' : 'light')
     },
     [theme],
   )
 
-  // Listen for system preference changes
   useEffect(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
     const media = window.matchMedia(MEDIA)
 
     media.addEventListener('change', handleMediaQuery)
@@ -61,23 +63,21 @@ export function ThemeProvider({
   }, [handleMediaQuery])
 
   useEffect(() => {
-    const root = window.document.documentElement
+    if (typeof window === 'undefined') {
+      return
+    }
 
-    let targetTheme: string
+    let targetTheme: 'dark' | 'light'
 
     if (theme === 'system') {
-      localStorage.removeItem(storageKey)
+      window.localStorage.removeItem(storageKey)
       targetTheme = window.matchMedia(MEDIA).matches ? 'dark' : 'light'
     } else {
-      localStorage.setItem(storageKey, theme)
+      window.localStorage.setItem(storageKey, theme)
       targetTheme = theme
     }
 
-    // Only update if the target theme is not already applied
-    if (!root.classList.contains(targetTheme)) {
-      root.classList.remove('light', 'dark')
-      root.classList.add(targetTheme)
-    }
+    applyThemeClass(targetTheme)
   }, [theme, storageKey])
 
   const value = useMemo(
@@ -89,34 +89,37 @@ export function ThemeProvider({
   )
 
   return (
-    <ThemeProviderContext {...props} value={value}>
-      <ScriptOnce>
-        {/* Apply theme early to avoid FOUC */}
-        {`(() => {
-          const storedTheme = localStorage.getItem('${storageKey}');
-          const fallbackTheme = '${defaultTheme}';
-          const resolvedTheme =
-            storedTheme === 'light' || storedTheme === 'dark'
-              ? storedTheme
-              : storedTheme === 'system'
-                ? (window.matchMedia('${MEDIA}').matches ? 'dark' : 'light')
-                : fallbackTheme === 'system'
-                  ? (window.matchMedia('${MEDIA}').matches ? 'dark' : 'light')
-                  : fallbackTheme;
-          const root = document.documentElement;
-          root.classList.remove('light', 'dark');
-          root.classList.add(resolvedTheme);
-        })()`}
-      </ScriptOnce>
+    <ThemeProviderContext value={value}>
       {children}
     </ThemeProviderContext>
   )
 }
 
 export const useTheme = () => {
-  const context = use(ThemeProviderContext)
+  const context = useContext(ThemeProviderContext)
 
   if (context === undefined) throw new Error('useTheme must be used within a ThemeProvider')
 
   return context
+}
+
+function getStoredTheme(storageKey: string, defaultTheme: Theme) {
+  if (typeof window === 'undefined') {
+    return defaultTheme
+  }
+
+  const storedTheme = window.localStorage.getItem(storageKey)
+
+  if (storedTheme === 'light' || storedTheme === 'dark' || storedTheme === 'system') {
+    return storedTheme
+  }
+
+  return defaultTheme
+}
+
+function applyThemeClass(theme: 'light' | 'dark') {
+  const rootElement = window.document.documentElement
+
+  rootElement.classList.remove('light', 'dark')
+  rootElement.classList.add(theme)
 }
