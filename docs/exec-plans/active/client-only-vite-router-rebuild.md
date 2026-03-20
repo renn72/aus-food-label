@@ -6,7 +6,7 @@ Rebuild `/home/renn/projects/aus-food-label/aus-food-label` from a TanStack Star
 
 ## Progress
 
-- [ ] Create and commit the migration plan on a dedicated branch.
+- [x] (2026-03-20 10:06Z) Create and commit the migration plan on a dedicated branch.
 - [ ] Replace the TanStack Start entry, route generation, and SSR shell with a plain Vite SPA entry and a single TanStack Router route.
 - [ ] Implement client-side ingredient seed loading from the two CSV files and add validated local storage persistence for custom ingredients and recipes.
 - [ ] Rebuild the UI into a one-page workflow that supports ingredient management, recipe creation, and nutrition label output with a disclaimer.
@@ -14,11 +14,11 @@ Rebuild `/home/renn/projects/aus-food-label/aus-food-label` from a TanStack Star
 
 ## Surprises & Discoveries
 
-- `(none yet)`
+- The repository does not contain `/home/renn/projects/aus-food-label/aus-food-label/docs/PLANS.md`, so the ExecPlan had to be authored without a local template.
 
 ## Decision Log
 
-- `(none yet)`
+- 2026-03-20: Created the migration record on branch `client-only-vite-router` before implementation so the runtime rewrite can proceed in staged commits.
 
 ## Outcomes & Retrospective
 
