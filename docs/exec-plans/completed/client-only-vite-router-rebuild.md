@@ -10,13 +10,14 @@ Rebuild `/home/renn/projects/aus-food-label/aus-food-label` from a TanStack Star
 - [x] (2026-03-20 10:29Z) Replace the TanStack Start entry, route generation, and SSR shell with a plain Vite SPA entry and a single TanStack Router route.
 - [x] (2026-03-20 10:29Z) Implement client-side ingredient seed loading from the two CSV files and add validated local storage persistence for custom ingredients and recipes.
 - [x] (2026-03-20 10:29Z) Rebuild the UI into a one-page workflow that supports ingredient management, recipe creation, and nutrition label output with a disclaimer.
-- [ ] Remove obsolete server/auth/database dependencies and files, validate with lint/type checks, and complete the plan.
+- [x] (2026-03-20 10:30Z) Remove obsolete server/auth/database dependencies and files, validate with lint/type checks, and complete the plan.
 
 ## Surprises & Discoveries
 
 - The repository does not contain `/home/renn/projects/aus-food-label/aus-food-label/docs/PLANS.md`, so the ExecPlan had to be authored without a local template.
 - The bundled ingredient CSVs are only about 1.07 MB combined and roughly 2,083 rows, which made direct in-browser parsing practical without introducing an extra CSV dependency.
 - Moving the app away from server functions was simpler than expected because `/home/renn/projects/aus-food-label/aus-food-label/src/lib/recipe/nutrition.ts` already performed the core label calculations on plain objects.
+- The repo had been generated against a Vite 8 beta, which left peer-version warnings after the Start stack was removed. Moving back to stable Vite 7 produced a cleaner client-only toolchain.
 
 ## Decision Log
 
@@ -24,10 +25,16 @@ Rebuild `/home/renn/projects/aus-food-label/aus-food-label` from a TanStack Star
 - 2026-03-20: Used a code-based TanStack Router setup with a single `/` route instead of file-based routing, because the app is now intentionally a one-page SPA and no generated route tree is needed.
 - 2026-03-20: Implemented Jotai-managed client state with versioned local storage recovery rather than `atomWithStorage`, so malformed JSON and partially invalid arrays can be sanitized explicitly.
 - 2026-03-20: Loaded the base ingredient catalogue directly from the two shipped CSV files in the browser using a small parser adapted from the old import script, which kept the CSVs as the source of truth.
+- 2026-03-20: Pruned the package graph back to a plain Vite + TanStack Router client app and downgraded from Vite 8 beta to stable Vite 7 to remove peer-version mismatches.
 
 ## Outcomes & Retrospective
 
-- `(fill when complete)`
+- The site now runs as a client-only Vite SPA with a single TanStack Router route and no server runtime.
+- Base ingredients load from the two bundled CSV files in the browser, while custom ingredients and recipes persist in validated local storage through Jotai-managed client state.
+- The interface was flattened into one page with dedicated sections for ingredient browsing, custom ingredient creation, recipe creation, saved recipe selection, and nutrition label preview.
+- The nutrition label area now includes the required disclaimer that the output is not guaranteed and is used at the user's own risk.
+- Old auth, database, TanStack Start, and import/migration code paths were removed, and both `pnpm lint` and `pnpm build` succeeded at the end of the migration.
+- Residual risk: the production bundle still triggers Vite's chunk-size warning because the UI stack is substantial, but the build succeeds and the warning is advisory rather than a functional failure.
 
 ## Context and Orientation
 
